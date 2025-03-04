@@ -28,7 +28,7 @@ jobs:
         id: find_projects
         run: |
           projects=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKEN }}" \
-          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/events" | jq -r '.[].project_card.project.name')
+          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/events" | jq -r 'map(select(.project_card != null) | .project_card.project.name) | unique | join(",")')
           echo "projects=${projects}" >> $GITHUB_OUTPUT
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
