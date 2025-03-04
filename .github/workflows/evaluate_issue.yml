@@ -8,38 +8,28 @@ jobs:
   evaluate:
     runs-on: ubuntu-latest
     steps:
-      - name: "Get all labels of the Issue"
-        id: get_labels
-        run: |
-          labels=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKEN }}" \
-          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels" | jq -r '.[].name')
-          echo "::set-output name=labels::${labels}"
       - name: "Check if workload is set"
         id: check_workload
+        if: |
+          contains(github.event.label.name, 'workload:high') ||
+          contains(github.event.label.name, 'workload:medium') ||
+          contains(github.event.label.name, 'workload:low')
         run: |
-          if [[ "${{ steps.get_labels.outputs.labels }}" == *"workload:high"* || "${{ steps.get_labels.outputs.labels }}" == *"workload:medium"* || "${{ steps.get_labels.outputs.labels }}" == *"workload:low"* ]]; then
-            echo "Workload label is set"
-            echo "::set-env name=WORKLOAD_SET::true"
-          else
-            echo "Workload label is not set"
-            echo "::set-env name=WORKLOAD_SET::false"
-          fi
+            echo "WORKLOAD_SET=true" >> $GITHUB_ENV
       - name: "Check if priority is set"
         id: check_urgency
+        if: |
+          contains(github.event.label.name, 'priority:high') ||
+          contains(github.event.label.name, 'priority:medium') ||
+          contains(github.event.label.name, 'priority:low')
         run: |
-          if [[ "${{ steps.get_labels.outputs.labels }}" == *"priority:high"* || "${{ steps.get_labels.outputs.labels }}" == *"priority:medium"* || "${{ steps.get_labels.outputs.labels }}" == *"priority:low"* ]]; then
-            echo "Priority label is set"
-            echo "::set-env name=PRIORITY_SET::true"
-          else
-            echo "priority label is not set"
-            echo "::set-env name=PRIORITY_SET::false"
-          fi
+            echo "PRIORITY_SET=true" >> $GITHUB_ENV
       - name: "Find associated Projects"
         id: find_projects
         run: |
           projects=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKEN }}" \
           "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/projects" | jq -r '.[].name')
-          echo "::set-output name=projects::${projects}"
+          echo "projects=${projects}" >> $GITHUB_OUTPUT
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
