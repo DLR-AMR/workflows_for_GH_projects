@@ -1,0 +1,49 @@
+name: "Move the Issue after workload and urgency is evaluated"
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Check if workload is set"
+        id: check_workload
+        if: |
+          contains(join(github.event.issue.labels.*.name, ','), 'workload:high') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
+        run: |
+            echo "WORKLOAD_SET=true" >> $GITHUB_ENV
+      - name: "Check if priority is set"
+        id: check_urgency
+        if: |
+          contains(join(github.event.issue.labels.*.name, ','), 'priority:high') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
+        run: |
+            echo "PRIORITY_SET=true" >> $GITHUB_ENV
+      - name: "Find associated Projects"
+        id: find_projects
+        run: |
+          projects=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/projects" | jq -r '.[].name')
+          echo "projects=${projects}" >> $GITHUB_OUTPUT
+      - name: "Move issue to 'Todo' column in associated projects"
+        if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
+        run: |
+          for project in ${{ steps.find_projects.outputs.projects }}; do
+            project_id=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/projects" | jq -r ".[] | select(.name==\"$project\") | .id")
+        
+            column_id=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKENN }}" \
+            "https://api.github.com/projects/$project_id/columns" | jq -r '.[] | select(.name=="Todo") | .id')
+        
+            if [ -n "$column_id" ]; then
+              curl -s -X POST -H "Authorization: token ${{ secrets.T8DDY_TOKEN }}" \
+              -H "Accept: application/vnd.github.inertia-preview+json" \
+              "https://api.github.com/projects/columns/$column_id/cards" \
+              -d "{\"content_id\":${{ github.event.issue.id }},\"content_type\":\"Issue\"}"
+            fi
+          done
