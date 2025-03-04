@@ -27,7 +27,7 @@ jobs:
       - name: "Find associated Projects"
         id: find_projects
         run: |
-          project_node_ids=$(curl --request GET \
+          project_node_ids=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                             --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
