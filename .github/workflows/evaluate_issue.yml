@@ -27,17 +27,16 @@ jobs:
       - name: "Find associated Projects"
         id: find_projects
         run: |
-          projects=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKEN }}" \
-          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/events" | jq -r 'map(select(.project_card != null) | .project_card.project.name) | unique | join(",")')
-          echo "projects=${projects}" >> $GITHUB_OUTPUT
+          project_node_ids=$(curl --request POST \
+                            --url https://api.github.com/graphql \
+                            --header 'Authorization: Bearer TOKEN' \
+                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
+          echo "projects=${project_node_ids}" >> $GITHUB_OUTPUT
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
-          for project in ${{ steps.find_projects.outputs.projects }}; do
-            project_id=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/projects" | jq -r ".[] | select(.name==\"$project\") | .id")
-        
-            column_id=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKENN }}" \
+          for project_id in ${{ steps.find_projects.project_node_ids.projects }}; do        
+            column_id=$(curl -s -H "Authorization: token ${{ secrets.T8DDY_TOKEN }}" \
             "https://api.github.com/projects/$project_id/columns" | jq -r '.[] | select(.name=="Todo") | .id')
         
             if [ -n "$column_id" ]; then
