@@ -15,7 +15,7 @@ jobs:
           contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') ||
           contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
         run: |
-            echo "WORKLOAD_SET=true" >> $GITHUB_ENV
+            echo "WORKLOAD_SET=true" >> $GITHUB_OUTPUT
       - name: "Check if priority is set"
         id: check_urgency
         if: |
@@ -23,7 +23,7 @@ jobs:
           contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') ||
           contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
         run: |
-            echo "PRIORITY_SET=true" >> $GITHUB_ENV
+            echo "PRIORITY_SET=true" >> $GITHUB_OUTPUT
       - name: "Find associated Projects"
         id: find_projects
         run: |
@@ -31,7 +31,7 @@ jobs:
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                             --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
-          echo "project_node_ids=${project_node_ids}" >> $GITHUB_ENV
+          echo "project_node_ids=${project_node_ids}" >> $GITHUB_OUTPUT
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
