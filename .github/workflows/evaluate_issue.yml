@@ -30,14 +30,13 @@ jobs:
           project_node_ids=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first 20) {nodes {id title}}}}"}')
+                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
           echo "project_node_ids=${project_node_ids}" >> $GITHUB_OUTPUT
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
-            project_ids=$(echo "${{ steps.find_projects.outputs.project_node_ids }}" | jq -r '.data.organization.projectsV2.nodes | map(.id) | join(" ")')
+            project_ids=$(echo ${{ steps.find_projects.outputs.project_node_ids }} | jq -r '.data.organization.projectsV2.nodes[].id')
             echo "project_ids=$project_ids"
             for project_id in $project_ids; do
               echo "project_id is $project_id"
-
             done
