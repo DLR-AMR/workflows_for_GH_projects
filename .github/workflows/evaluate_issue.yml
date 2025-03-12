@@ -35,10 +35,10 @@ jobs:
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
-          for project_id in ${{ steps.find_projects.project_node_ids.projects }}; do
+          for project_id in ${{ steps.find_projects.project_node_ids.project_node_ids }}; do
             column_id=$(curl -s -H "Authorization: token ${{ secrets.TEST_SECRET }}" \
             "https://api.github.com/projects/$project_id/columns" | jq -r '.[] | select(.name=="Todo") | .id')
-        
+            echo "column_id=$column_id"
             if [ -n "$column_id" ]; then
               curl -s -X POST -H "Authorization: token ${{ secrets.TEST_SECRET }}" \
               -H "Accept: application/vnd.github.inertia-preview+json" \
