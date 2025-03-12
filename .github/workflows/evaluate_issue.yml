@@ -35,14 +35,10 @@ jobs:
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
-            project_ids=$(echo "${{ steps.find_projects.outputs.project_node_ids }}" | grep -oP '"id":"\K[^"]+')
+            project_ids=$(echo "${{ steps.find_projects.outputs.project_node_ids }}" | jq -r '.data.organization.projectsV2.nodes[].id')
             echo "project_ids=$project_ids"
             for project_id in $project_ids; do
               echo "project_id is $project_id"
-                items=$(curl --request POST \
-                      --url https://api.github.com/graphql \
-                      --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                      --data '{"query":"{node(id: \"'"$project_id"'\") { ... on ProjectV2 { items(first: 100) { { nodes{ id fieldValues(first: 8) { nodes{ ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name }}} ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name }}}}} content { ... on Issue {title(first: 10) {nodes{id}}}} } } } }"}')
-                echo "items=$items"
+
 
             done
