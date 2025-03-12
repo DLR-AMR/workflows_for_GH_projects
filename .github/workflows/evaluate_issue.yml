@@ -15,7 +15,7 @@ jobs:
           contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') ||
           contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
         run: |
-            echo "WORKLOAD_SET=true" >> $GITHUB_OUTPUT
+            echo "WORKLOAD_SET=true" >> $GITHUB_ENV
       - name: "Check if priority is set"
         id: check_urgency
         if: |
@@ -23,7 +23,7 @@ jobs:
           contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') ||
           contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
         run: |
-            echo "PRIORITY_SET=true" >> $GITHUB_OUTPUT
+            echo "PRIORITY_SET=true" >> $GITHUB_ENV
       - name: "Find associated Projects"
         id: find_projects
         run: |
