@@ -45,6 +45,7 @@ jobs:
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                             --data '{"query":
                                 "{node(id: \"'$project_id'\") { ... on ProjectV2 {items(first: 20) { nodes{ id fieldValues(first: 8) { nodes{ ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name }}} ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name  id} } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name id}}}}} content{ ... on Issue {title id}} } } } } }"}')
+              echo "issues=$issues"
               issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
               for issue_id in $issue_ids; do
                 echo "issue_id is $issue_id"
@@ -52,6 +53,7 @@ jobs:
                   # Get the field id of the 'Status' field
                   status_field_id=$(echo $issues | jq -r '.data.node.items.nodes[].fieldValues.nodes[] | select(.field.name == "Status") | .field.id')
                   echo "status_field_id is $status_field_id"
+                  echo "change field $status_field_id of issue $issue_id in project $project_id to 'ToDo'"
                   response=$(curl --request POST \
                     --url https://api.github.com/graphql \
                     --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
