@@ -47,9 +47,15 @@ jobs:
                                 "{node(id: \"'$project_id'\") { ... on ProjectV2 {items(first: 20) { nodes{ id fieldValues(first: 8) { nodes{ ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name }}} ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name  id} } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name id}}}}} content{ ... on Issue {title id}} } } } } }"}')
               echo "issues=$issues"
               issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
-              for issue_id in $issue_ids; do
+              PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
+              combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
+              echo "combined_ids=$combined_ids"
+              for issue in $combined_ids; do
+                issue_id=$(echo $issue | cut -d, -f1)
                 echo "issue_id is $issue_id"
                 if [ $issue_id == '${{ github.event.issue.node_id }}' ]; then
+                  PVII_id=$(echo $issue | cut -d, -f2)
+                  echo "PVII_id is $PVII_id"
                   # Get the field id of the 'Status' field
                   status_field_id=$(echo $issues | jq -r '.data.node.items.nodes[].fieldValues.nodes[] | select(.field.name == "Status") | .field.id')
                   echo "status_field_id is $status_field_id"
