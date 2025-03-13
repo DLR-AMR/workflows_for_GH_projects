@@ -55,7 +55,7 @@ jobs:
                   response=$(curl --request POST \
                     --url https://api.github.com/graphql \
                     --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                    --data '{"query":"mutation {updateProjectV2Item(input: {projectId: \"'$project_id'\", itemId: \"'$issue_id'\", fieldValues: [{fieldId: \"'$status_field_id'\", value: \"ToDo\"}]}) {projectV2Item {id}}}"}')
+                    --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$issue_id'\", fieldId: \"'$status_field_id'\", value: { text: \"ToDo\"}}) {projectV2Item {id}}}"}')
                   echo "response=$response"
                 fi
               done
