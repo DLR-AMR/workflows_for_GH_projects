@@ -53,11 +53,11 @@ jobs:
                   # Get the field id of the 'Status' field
                   status_field_id=$(echo $issues | jq -r '.data.node.items.nodes[].fieldValues.nodes[] | select(.field.name == "Status") | .field.id')
                   echo "status_field_id is $status_field_id"
-                  curl --request POST \
+                  response=$(curl --request POST \
                     --url https://api.github.com/graphql \
                     --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                    --data '{"query":"mutation {updateProjectV2Item(input: {projectId: \"'$project_id'\", itemId: \"'$issue_id'\", fieldValues: [{fieldId: \"'$status_field_id'\", value: \"ToDo\"}]}) {projectV2Item {id}}}"}'
-
+                    --data '{"query":"mutation {updateProjectV2Item(input: {projectId: \"'$project_id'\", itemId: \"'$issue_id'\", fieldValues: [{fieldId: \"'$status_field_id'\", value: \"ToDo\"}]}) {projectV2Item {id}}}"}')
+                  echo "response=$response"
                 fi
               done
             done
