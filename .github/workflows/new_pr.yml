@@ -11,6 +11,7 @@ jobs:
       - name: "Get link between PR and Issue"
         id: get_pr_issue_link
         run: |
+            echo "Test"
             ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+')
             if [ -z "$ISSUE_NUMBER" ]; then
                 echo "No issue number found in the pull request body."
