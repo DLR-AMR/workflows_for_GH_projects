@@ -16,7 +16,7 @@ jobs:
                 echo "No issue number found in the pull request body."
                 echo "NUMBER_IS_SET=false" >> $GITHUB_ENV
             fi
-            CLEAN_ISSUE_NUMBER = $(echo $ISSUE_NUMBER | tr -d '#')
+            CLEAN_ISSUE_NUMBER=$(echo $ISSUE_NUMBER | tr -d '#')
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_ENV
             echo "NUMBER_IS_SET=true" >> $GITHUB_ENV
       - name: "Find associated Projects"
