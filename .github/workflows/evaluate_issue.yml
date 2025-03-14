@@ -27,35 +27,35 @@ jobs:
       - name: "Find associated Projects"
         id: find_projects
         run: |
-          project_node_ids=$(curl --request POST \
+          projects=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
-          echo "project_node_ids=${project_node_ids}" >> $GITHUB_OUTPUT
+                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {... on ProjectV2Field {id title} ... on ProjectV2SingleSelectField {id name options {id name}}}}}}"}')
+          echo "projects=${projects}" >> $GITHUB_OUTPUT
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
             echo "${{ github.event.issue.node_id }}"
-            project_ids=$(echo '${{ steps.find_projects.outputs.project_node_ids }}' | jq -r '.data.organization.projectsV2.nodes[].id')
-            echo "project_ids=$project_ids"
-            for project_id in $project_ids; do
+            for project in ${{steps.find_projects.outputs.projects}}; do
+              project_id=$(echo $project | jq -r '.data.organization.projectsV2.nodes[].id')
               echo "project_id is $project_id"
               issues=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                             --data '{"query":
-                                "{node(id: \"'$project_id'\") { ... on ProjectV2 {items(first: 20) { nodes{ id fieldValues(first: 8) { nodes{ ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name }}} ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name  id} } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name id}}}}} content{ ... on Issue {title id}} } } } } }"}')
+                                "{node(id: \"'$project_id'\") { ... on ProjectV2 {items(first: 20) { nodes{ id fieldValues(first: 8) { nodes{ ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name }}} ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name  id} } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name id options {id name}}}}}} content{ ... on Issue {title id}} } } } } }"}')
               echo "issues=$issues"
               issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
               PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
               combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
               echo "combined_ids=$combined_ids"
-              for issue in $combined_ids; do
-                issue_id=$(echo $issue | cut -d, -f1)
+              for issue in $issues; do
+                issue_id=$(echo $issue | jq -r '.data.node.items.nodes[].content.id')
                 echo "issue_id is $issue_id"
                 if [ $issue_id == '${{ github.event.issue.node_id }}' ]; then
-                  PVII_id=$(echo $issue | cut -d, -f2)
+                  PVII_id=$(echo $issue | jq -r '.data.node.items.nodes[].id')
                   echo "PVII_id is $PVII_id"
+                  ToDo_Option_id=$(echo $project | jq '.data.organization.projectV2.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "ToDo") | .id')
                   # Get the field id of the 'Status' field
                   status_field_id=$(echo $issues | jq -r '.data.node.items.nodes[].fieldValues.nodes[] | select(.field.name == "Status") | .field.id')
                   echo "status_field_id is $status_field_id"
@@ -63,7 +63,7 @@ jobs:
                   response=$(curl --request POST \
                     --url https://api.github.com/graphql \
                     --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                    --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { text: \"ToDo\"}}) {projectV2Item {id}}}"}')
+                    --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: $ToDo_Option_id}}) {projectV2Item {id}}}"}')
                   echo "response=$response"
                 fi
               done
