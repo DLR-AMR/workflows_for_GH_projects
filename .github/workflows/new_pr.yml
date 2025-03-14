@@ -1,0 +1,15 @@
+name: "Test something with PRs"
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Get link between PR and Issue"
+        id: get_pr_issue_link
+        run: |
+            ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+' | grep -oE '[0-9]+')
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER"
