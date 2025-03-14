@@ -34,8 +34,7 @@ jobs:
           echo "projects=$projects"
           project_ids=$(echo $projects | jq -r '.data.organization.projectsV2.nodes[].id')
           echo "project_ids=${project_ids}"
-          echo "project_ids=${project_ids}" >> $GITHUB_OUTPUT
-
+          echo "project_ids=${project_ids}" >> $GITHUB_ENV
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
