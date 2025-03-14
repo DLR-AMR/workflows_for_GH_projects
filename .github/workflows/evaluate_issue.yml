@@ -30,7 +30,7 @@ jobs:
           projects=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {... on ProjectV2Field {id title} ... on ProjectV2SingleSelectField {id name options {id name}}}}}}"}')
+                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {... on ProjectV2Field {id name} ... on ProjectV2SingleSelectField {id name options {id name}}}}}}"}')
           echo "projects=${projects}" >> $GITHUB_OUTPUT
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
