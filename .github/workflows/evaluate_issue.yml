@@ -43,7 +43,7 @@ jobs:
               issues=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                            --data "{\"query\":\"{node(id: $project_id) { ... on ProjectV2 {items(first: 20) { nodes{ id fieldValues(first: 8) {nodes id} content{ ... on Issue {id}} } } } } }\"}")
+                            --data "{\"query\":\"{node(id: $project_id) { ... on ProjectV2 {items(first: 20) { nodes{ id fieldValues(first: 8) {nodes ... on ProjectV2ItemFieldTextValue{text}} content{ ... on Issue {id}} } } } } }\"}")
               echo "issues=$issues"
               issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
               PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
