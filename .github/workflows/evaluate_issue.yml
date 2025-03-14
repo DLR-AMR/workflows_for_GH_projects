@@ -30,15 +30,14 @@ jobs:
           projects=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {... on ProjectV2Field {id name} ... on ProjectV2SingleSelectField {id name options {id name}}}}}}"}')
+                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {... on ProjectV2Field {id title}}}}"}')
           echo "projects=${projects}" >> $GITHUB_OUTPUT
-          echo "$projects"
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
             echo "${{ github.event.issue.node_id }}"
-            for project in ${{steps.find_projects.outputs.projects}}; do
-              echo "project=$project"
+            echo "projects=${{ steps.find_projects.outputs.projects }}"
+            for project in $projects; do
               project_id=$(echo $project | jq -r '.data.organization.projectsV2.nodes[].id')
               echo "project_id is $project_id"
               issues=$(curl --request POST \
@@ -55,9 +54,16 @@ jobs:
                 issue_id=$(echo $issue | jq -r '.data.node.items.nodes[].content.id')
                 echo "issue_id is $issue_id"
                 if [ $issue_id == '${{ github.event.issue.node_id }}' ]; then
+                  #get additional information
+                  detailed_project=$(curl --request POST \
+                            --url https://api.github.com/graphql \
+                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectV2(number: $project_id) {id fields(first: 20) {nodes {... on ProjectV2Field {id name} ... on ProjectV2SingleSelectField {id name options {id name}}}}})}")}"')
+                  echo "detailed_project=$detailed_project"
+                  ToDo_Option_id=$(echo $detailed_project | jq -r '.data.organization.projectV2.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "ToDo") | .id')          
                   PVII_id=$(echo $issue | jq -r '.data.node.items.nodes[].id')
+
                   echo "PVII_id is $PVII_id"
-                  ToDo_Option_id=$(echo $project | jq '.data.organization.projectV2.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "ToDo") | .id')
                   # Get the field id of the 'Status' field
                   status_field_id=$(echo $issues | jq -r '.data.node.items.nodes[].fieldValues.nodes[] | select(.field.name == "Status") | .field.id')
                   echo "status_field_id is $status_field_id"
