@@ -36,8 +36,11 @@ jobs:
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
-            #echo "${{ github.event.issue.node_id }}"
-            #echo "projects=${{ steps.find_projects.outputs.projects }}"
+            echo "${{ github.event.issue.node_id }}"
+            echo "projects=${{ steps.find_projects.outputs.projects }}"
+            for project in $projects; do
+              echo "project=$project"
+            done
             #for project in $projects; do
             #  project_id=$(echo $project | jq -r '.data.organization.projectsV2.nodes[].id')
             #  echo "project_id is $project_id"
