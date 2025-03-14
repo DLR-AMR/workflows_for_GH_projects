@@ -1,4 +1,4 @@
-name: "Test something with PRs"
+name: "Move the Issue Card to the correct column"
 
 on:
   pull_request:
@@ -11,6 +11,54 @@ jobs:
       - name: "Get link between PR and Issue"
         id: get_pr_issue_link
         run: |
-            ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+' | grep -oE '[0-9]+')
-            echo "ISSUE_NUMBER=$ISSUE_NUMBER"
-            echo "TEst"
+            ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+')
+            if [ -z "$ISSUE_NUMBER" ]; then
+                echo "No issue number found in the pull request body."
+                echo "NUMBER_IS_SET=false" >> $GITHUB_ENV
+            fi
+            CLEAN_ISSUE_NUMBER = $(echo $ISSUE_NUMBER | tr -d '#')
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_ENV
+            echo "NUMBER_IS_SET=true" >> $GITHUB_ENV
+      - name: "Find associated Projects"
+        id: find_projects
+        if: env.NUMBER_IS_SET == 'true'
+        run: |
+          projects=$(curl --request POST \
+                            --url https://api.github.com/graphql \
+                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
+          echo "projects=$projects">> $GITHUB_OUTPUT
+          for project_id in $project_ids; do
+              echo "project_id is $project_id"
+              issues=$(curl --request POST \
+                            --url https://api.github.com/graphql \
+                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                            --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } } } } }\"}")
+              echo "issues=$issues"
+              issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
+              PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
+              combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
+              for combined_id in $combined_ids; do
+                issue_id=$(echo $combined_id | cut -d, -f1)
+                PVII_id=$(echo $combined_id | cut -d, -f2)
+                echo "issue_id is $issue_id"
+                echo "PVII_id is $PVII_id"
+                if [ $issue_id == env.CLEAN_ISSUE_NUMBER ]; then
+                    detailed_project=$(curl --request POST \
+                        --url https://api.github.com/graphql \
+                        --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                        --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
+                  echo "detailed_project=$detailed_project"
+                  status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
+                  echo "status_field_id is $status_field_id"
+                  Needs_Review_Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "Needs Review") | .id')
+                  echo "Needs_Review_Option_id is $Needs_Review_Option_id"
+                  echo "change field $status_field_id of issue $issue_id in project $project_id to 'Needs Review'"
+                  response=$(curl --request POST \
+                    --url https://api.github.com/graphql \
+                    --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                    --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Needs_Review_Option_id'\"}}) {projectV2Item {id}}}"}')
+                  echo "response=$response"
+                fi
+              done
+            done
