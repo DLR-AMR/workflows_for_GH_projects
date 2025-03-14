@@ -54,11 +54,10 @@ jobs:
                 echo "issue_id is $issue_id"
                 echo "PVII_id is $PVII_id"
                 if [ $issue_id == '${{ github.event.issue.node_id }}' ]; then
-                  detailed_project=$(curl --request POST \
-                            --url https://api.github.com/graphql \
-                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectV2(number: $project_id) {id fields(first: 20) {nodes {... on ProjectV2Field {id name} ... on ProjectV2SingleSelectField {id name options {id name}}}}})}")}"')
-                
+                    detailed_project=$(curl --request POST \
+                        --url https://api.github.com/graphql \
+                        --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                        --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
                   echo "detailed_project=$detailed_project"
                   status_field_id=$(echo $issues | jq -r '.data.node.items.nodes[].fieldValues.nodes[] | select(.field.name == "Status") | .field.id')
                   echo "status_field_id is $status_field_id"
