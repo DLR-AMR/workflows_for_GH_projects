@@ -37,7 +37,7 @@ jobs:
         run: |
             project_ids=$(echo '${{ steps.find_projects.outputs.projects }}' | jq -r '.data.organization.projectsV2.nodes[].id')
             echo "project_ids=${project_ids}"
-            echo "${{ github.event.issue.node_id }}"
+            echo "searching for issue ${{ github.event.issue.node_id }}"
             for project_id in $project_ids; do
               echo "project_id is $project_id"
               issues=$(curl --request POST \
