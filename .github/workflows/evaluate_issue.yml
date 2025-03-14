@@ -32,6 +32,7 @@ jobs:
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                             --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {... on ProjectV2Field {id title}}}}"}')
           echo "projects=${projects}" >> $GITHUB_OUTPUT
+          echo "projects=${projects}"
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
