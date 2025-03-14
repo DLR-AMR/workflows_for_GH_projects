@@ -53,7 +53,7 @@ jobs:
                 PVII_id=$(echo $combined_id | cut -d, -f2)
                 echo "issue_id is $issue_id"
                 echo "PVII_id is $PVII_id"
-                if [$issue_id == '${{ github.event.issue.node_id }}']; then
+                if [ $issue_id == '${{ github.event.issue.node_id }}' ]; then
                   detailed_project=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
