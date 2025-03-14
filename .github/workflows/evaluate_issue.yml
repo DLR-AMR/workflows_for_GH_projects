@@ -59,9 +59,9 @@ jobs:
                         --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                         --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
                   echo "detailed_project=$detailed_project"
-                  status_field_id=$(echo $issues | jq -r '.data.node.items.nodes[].fieldValues.nodes[] | select(.field.name == "Status") | .field.id')
+                  status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
                   echo "status_field_id is $status_field_id"
-                  ToDo_Option_id=$(echo $detailed_project | jq -r '.data.organization.projectV2.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "ToDo") | .id')
+                    ToDo_Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "ToDo") | .id')
                   echo "ToDo_Option_id is $ToDo_Option_id"
                   echo "change field $status_field_id of issue $issue_id in project $project_id to 'ToDo'"
                   response=$(curl --request POST \
