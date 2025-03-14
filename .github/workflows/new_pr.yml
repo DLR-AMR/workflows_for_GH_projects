@@ -13,3 +13,4 @@ jobs:
         run: |
             ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+' | grep -oE '[0-9]+')
             echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+            echo "TEst"
