@@ -28,6 +28,7 @@ jobs:
         id: find_projects
         env:
           ORGANIZATION: DLR-AMR
+          GH_TOKEN: ${{ secrets.TEST_SECRET }}
         run: |
           gh api graphql -f query='
             query($org: String!, $number: Int!) {
