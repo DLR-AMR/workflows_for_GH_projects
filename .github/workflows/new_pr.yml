@@ -18,7 +18,7 @@ jobs:
                 echo "NUMBER_IS_SET=false" >> $GITHUB_ENV
             fi
             CLEAN_ISSUE_NUMBER=$(echo $ISSUE_NUMBER | tr -d '#')
-            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_ENV
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
             echo "NUMBER_IS_SET=true" >> $GITHUB_ENV
             echo "NUMBER_IS_SET=$NUMBER_IS_SET"
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
@@ -26,7 +26,7 @@ jobs:
         id: find_projects
         if: env.NUMBER_IS_SET == 'true'
         run: |
-          echo "CLEAN_ISSUE_NUMBER=steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER"
+          echo "CLEAN_ISSUE_NUMBER=${{steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER}}"
           projects=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
@@ -51,7 +51,7 @@ jobs:
                 echo "issue_id is $issue_id"
                 echo "PVII_id is $PVII_id"
                 echo "issue_number is $issue_number"
-                if [ $issue_number == ${{ env.CLEAN_ISSUE_NUMBER }} ]; then
+                if [ $issue_number == ${{steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER}} ]; then
                     detailed_project=$(curl --request POST \
                         --url https://api.github.com/graphql \
                         --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
