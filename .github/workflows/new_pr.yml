@@ -19,6 +19,8 @@ jobs:
             CLEAN_ISSUE_NUMBER=$(echo $ISSUE_NUMBER | tr -d '#')
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_ENV
             echo "NUMBER_IS_SET=true" >> $GITHUB_ENV
+            echo "NUMMBER_IS_SET= $NUMBER_IS_SET"
+            echo "CLEAN_ISSUE_NUMBER= $CLEAN_ISSUE_NUMBER"
       - name: "Find associated Projects"
         id: find_projects
         if: env.NUMBER_IS_SET == 'true'
