@@ -56,7 +56,7 @@ jobs:
                         --url https://api.github.com/graphql \
                         --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                         --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } items(first: 100) { nodes { content { ... on Issue { id number } } } } } } }\"}")
-                  compare_issue_id=$(echo $detailed_project | jq -r '.data.node.items.nodes[].content.number')
+                  compare_issue_id=$(echo $detailed_project | jq -r '.data.node.items.nodes[].content.id')
                   echo "compare_issue_id is $compare_issue_id"
                   #Check if the issue_id is in compare_issue_id
                   if echo "$compare_issue_id" | grep -q "$issue_id"; then
