@@ -10,6 +10,7 @@ jobs:
     steps:
       - name: "Check if workload is set"
         id: check_workload
+        # Check if the issue has a workload label
         if: |
           contains(join(github.event.issue.labels.*.name, ','), 'workload:high') ||
           contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') ||
@@ -18,6 +19,7 @@ jobs:
             echo "WORKLOAD_SET=true" >> $GITHUB_ENV
       - name: "Check if priority is set"
         id: check_urgency
+        # Check if the issue has a priority label
         if: |
           contains(join(github.event.issue.labels.*.name, ','), 'priority:high') ||
           contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') ||
@@ -26,6 +28,7 @@ jobs:
             echo "PRIORITY_SET=true" >> $GITHUB_ENV
       - name: "Find associated Projects"
         id: find_projects
+        # Find the projects associated with the organization
         run: |
           projects=$(curl --request POST \
                             --url https://api.github.com/graphql \
@@ -35,9 +38,11 @@ jobs:
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
+            # Get the project IDs
             project_ids=$(echo '${{ steps.find_projects.outputs.projects }}' | jq -r '.data.organization.projectsV2.nodes[].id')
             echo "project_ids=${project_ids}"
             echo "searching for issue ${{ github.event.issue.node_id }}"
+            # Iterate over the project Ids and find the issue within the project
             for project_id in $project_ids; do
               echo "project_id is $project_id"
               issues=$(curl --request POST \
@@ -45,25 +50,32 @@ jobs:
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                             --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } } } } }\"}")
               echo "issues=$issues"
+              # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
               issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
               PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
+              # In the following loop we need both values, so we combine them into a single string
               combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
               for combined_id in $combined_ids; do
                 issue_id=$(echo $combined_id | cut -d, -f1)
                 PVII_id=$(echo $combined_id | cut -d, -f2)
                 echo "issue_id is $issue_id"
                 echo "PVII_id is $PVII_id"
+                # Check if the issue_id matches the issue node_id of the issue that triggered the event. 
                 if [ $issue_id == '${{ github.event.issue.node_id }}' ]; then
+                  # Get the detailed project information
                     detailed_project=$(curl --request POST \
                         --url https://api.github.com/graphql \
                         --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                         --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
                   echo "detailed_project=$detailed_project"
+                  # Extract the status field id
                   status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
                   echo "status_field_id is $status_field_id"
+                  # Get the option id for 'ToDo'
                   ToDo_Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "ToDo") | .id')
                   echo "ToDo_Option_id is $ToDo_Option_id"
                   echo "change field $status_field_id of issue $issue_id in project $project_id to 'ToDo'"
+                  # Move the issue to the 'ToDo' column
                   response=$(curl --request POST \
                     --url https://api.github.com/graphql \
                     --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
