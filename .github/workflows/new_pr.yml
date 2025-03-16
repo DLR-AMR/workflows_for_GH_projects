@@ -51,7 +51,7 @@ jobs:
                 echo "issue_id is $issue_id"
                 echo "PVII_id is $PVII_id"
                 echo "issue_number is $issue_number"
-                if [ $issue_number == ${{steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER}} ]; then
+                if [ $issue_number == '${{steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER}}' ]; then
                     detailed_project=$(curl --request POST \
                         --url https://api.github.com/graphql \
                         --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
