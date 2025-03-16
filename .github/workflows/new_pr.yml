@@ -1,8 +1,8 @@
-name: "Move the Issue Card to the correct column"
+name: "Move the Issue Card to the Needs Review column"
 
 on:
   pull_request:
-    types: [opened, reopened, edited]
+    types: [opened, reopened, edited, ready_for_review]
 
 jobs:
   evaluate:
@@ -11,38 +11,46 @@ jobs:
       - name: "Get link between PR and Issue"
         id: get_pr_issue_link
         run: |
+            # Extract the issue number from the pull request body
             ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+')
             echo "ISSUE_NUMBER=$ISSUE_NUMBER"
             if [ -z "$ISSUE_NUMBER" ]; then
                 echo "No issue number found in the pull request body."
                 echo "NUMBER_IS_SET=false" >> $GITHUB_ENV
             fi
+            # Remove the '#' from the issue number
             CLEAN_ISSUE_NUMBER=$(echo $ISSUE_NUMBER | tr -d '#')
+            # Set the cleaned issue number and NUMBER_IS_SET to true
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
             echo "NUMBER_IS_SET=true" >> $GITHUB_ENV
+            # Debug output
             echo "NUMBER_IS_SET=$NUMBER_IS_SET"
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
       - name: "Find associated Projects"
         id: find_projects
         if: env.NUMBER_IS_SET == 'true'
         run: |
-          echo "CLEAN_ISSUE_NUMBER=${{steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER}}"
+          # Get the projects associated with the organization
           projects=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                             --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
           echo "projects=$projects">> $GITHUB_OUTPUT
+          # Get the project IDs
           project_ids=$(echo $projects | jq -r '.data.organization.projectsV2.nodes[].id')
           for project_id in $project_ids; do
               echo "project_id is $project_id"
+              # Get the issues within the project
               issues=$(curl --request POST \
                             --url https://api.github.com/graphql \
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                             --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id number } } } } } } } }\"}")
               echo "issues=$issues"
+              # Extract the issue ids, PVII ids, and issue numbers. The issue_id is the global_id, the PVII id is the project specific id, and the issue number is the issue number (eg. #123)
               issue_numbers=$(echo $issues | jq -r '.data.node.items.nodes[].content.number')
               issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
               PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
+              # In the following loop we need all three values, so we combine them into a single string
               combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids") <(echo "$issue_numbers"))
               for combined_id in $combined_ids; do
                 issue_id=$(echo $combined_id | cut -d, -f1)
@@ -51,6 +59,7 @@ jobs:
                 echo "issue_id is $issue_id"
                 echo "PVII_id is $PVII_id"
                 echo "issue_number is $issue_number"
+                # Check if the issue_number is the same as the one in the pull request
                 if [ $issue_number == '${{steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER}}' ]; then
                     detailed_project=$(curl --request POST \
                         --url https://api.github.com/graphql \
@@ -61,11 +70,14 @@ jobs:
                   #Check if the issue_id is in compare_issue_id
                   if echo "$compare_issue_id" | grep -q "$issue_id"; then
                     echo "detailed_project=$detailed_project"
+                    # Get the status field id
                     status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
                     echo "status_field_id is $status_field_id"
+                    # Get the option id for 'Needs Review'
                     Needs_Review_Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "Needs Review") | .id')
                     echo "Needs_Review_Option_id is $Needs_Review_Option_id"
                     echo "change field $status_field_id of issue $issue_id in project $project_id to 'Needs Review'"
+                    # Move the issue to the 'Needs Review' column
                     response=$(curl --request POST \
                       --url https://api.github.com/graphql \
                       --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
