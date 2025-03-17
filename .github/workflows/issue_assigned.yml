@@ -17,6 +17,9 @@ jobs:
           contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
         run: |
             echo "WORKLOAD_SET=true" >> $GITHUB_ENV
+            # extract the workload value
+            workload=$(echo ${github.event.issue.labels.*.name} | grep -oE 'workload:[a-z]+')
+            echo "WORKLOAD=$workload" >> $GITHUB_OUTPUT
       - name: "Check if priority is set"
         id: check_urgency
         if: |
@@ -25,6 +28,9 @@ jobs:
           contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
         run: |
             echo "PRIORITY_SET=true" >> $GITHUB_ENV
+            # extract the priority value
+            priority=$(echo ${github.event.issue.labels.*.name} | grep -oE 'priority:[a-z]+')
+            echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
       - name: "Find associated Projects"
         id: find_projects
         # Find the projects associated with the organization
@@ -37,6 +43,8 @@ jobs:
       - name: "Move issue to 'Todo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         run: |
+            workload=${{ steps.check_workload.outputs.WORKLOAD }}
+            priority=${{ steps.check_urgency.outputs.PRIORITY }}
             # Get the project IDs
             project_ids=$(echo '${{ steps.find_projects.outputs.projects }}' | jq -r '.data.organization.projectsV2.nodes[].id')
             echo "project_ids=${project_ids}"
@@ -70,6 +78,16 @@ jobs:
                   # Extract the status field id
                   status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
                   echo "status_field_id is $status_field_id"
+                  workload_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .id')
+                  echo "workload_field_id is $workload_field_id"
+                  # Get the option id for the option that matches the workload
+                  workload_option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == "'$workload'") | .id')
+                  echo "workload_option_id is $workload_option_id"
+                  priority_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .id')
+                  echo "priority_field_id is $priority_field_id"
+                  # Get the option id for the option that matches the priority
+                  priority_option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == "'$priority'") | .id')
+                  echo "priority_option_id is $priority_option_id"
                   # Get the option id for 'In Progress'
                   Progress_Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "In Progress") | .id')
                   echo "Progress_Option_id is $Progress_Option_id"
@@ -79,6 +97,8 @@ jobs:
                     --url https://api.github.com/graphql \
                     --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                     --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Progress_Option_id'\"}}) {projectV2Item {id}}}"}')
+                    --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$priority_field_id'\", value: { singleSelectOptionId: \"'$priority_option_id'\"}}) {projectV2Item {id}}}"}')
+                    --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$workload_field_id'\", value: { singleSelectOptionId: \"'$workload_option_id'\"}}) {projectV2Item {id}}}"}')
                   echo "response=$response"
                 fi
               done
