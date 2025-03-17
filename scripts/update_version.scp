@@ -7,7 +7,7 @@ then
   if [ -d scripts ]
   then
     # The directory stack is automatically reset on script exit.
-    pushd scripts/ > /dev/null
+    push scripts/ > /dev/null
   else
     echo ERROR: scripts/ directory not found.
     exit 1
@@ -87,7 +87,7 @@ sed -i "s/date-released: [0-9]\{4\}\.[0-9]\{2\}\.[0-9]\{2\}/date-released: ${CUR
 GIT_COMMIT_MESSAGE="Updated the version to ${NEW_VERSION}"
 
 # Add the changes to a new commit
-git config user.name t8ddy
+git config user.name Davknapp
 
 
 echo "git add version.txt"
