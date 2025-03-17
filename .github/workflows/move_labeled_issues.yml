@@ -18,7 +18,8 @@ jobs:
         run: |
             echo "WORKLOAD_SET=true" >> $GITHUB_ENV
             # extract the workload value
-            workload=$(echo ${github.event.issue.labels.*.name} | grep -oE 'workload:[a-z]+')
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            workload=$(echo "$labels" | grep -oE 'workload:(high|medium|low)')
             echo "WORKLOAD=$workload" >> $GITHUB_OUTPUT
       - name: "Check if priority is set"
         id: check_urgency
@@ -30,7 +31,8 @@ jobs:
         run: |
             echo "PRIORITY_SET=true" >> $GITHUB_ENV
             # extract the priority value
-            priority=$(echo ${github.event.issue.labels.*.name} | grep -oE 'priority:[a-z]+')
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            priority=$(echo "$labels" | grep -oE 'priority:(high|medium|low)')
             echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
       - name: "Find associated Projects"
         id: find_projects
