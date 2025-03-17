@@ -1,0 +1,13 @@
+title: workflows_for_GH_projects
+version: 0.0.1
+date-released: "2025-03-2025"
+repository-code: "https://github.com/DLR-AMR/workflows_for_GH_projects"
+license: GPL-2.0
+type: software
+authors:
+  #Authors
+  - given-names: David
+    family-names: Knapp
+    email: David.Knapp@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-6305-1572"
