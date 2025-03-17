@@ -40,4 +40,4 @@ jobs:
     if: (github.event_name == 'pull_request' && needs.check_commit_message.outputs.trigger_version_update == 'true')
     uses: ./.github/workflows/create_version_tag.yml
     secrets: inherit
-    needs: [check_commit_message, t8code_tarball]
+    needs: [check_commit_message]
