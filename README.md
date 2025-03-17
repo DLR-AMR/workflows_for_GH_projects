@@ -1,6 +1,7 @@
 # Workflows for GitHub-projects
 This Repository provides and maintains a couple of workflow files to support our Lifecycle of an issue.
 
+Copy the files from ".github/workflows" into the workflow folder of your repository.
 Using the provided files together with an instance of the template project [Issue Lifecycle](https://github.com/orgs/DLR-AMR/projects/7) the managing of your issues is nearly fully automated.
 # How to setup a project. 
 1. Use the template [Issue Lifecycle](https://github.com/orgs/DLR-AMR/projects/7)
