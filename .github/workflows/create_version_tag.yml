@@ -22,6 +22,8 @@ jobs:
     - name: Get current branch name
       id: get_branch
       run: echo "branch_name=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
+    - name: Set execute permissions
+      run: chmod +x ./scripts/update_version.scp
     - name: Check for major tag
       if: contains(github.event.pull_request.labels.*.name, 'major-release')
       run: ./scripts/update_version.scp MAJOR ${GITHUB_HEAD_REF}
