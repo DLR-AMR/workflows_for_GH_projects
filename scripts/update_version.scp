@@ -91,7 +91,6 @@ git config user.name Davknapp
 
 
 echo "git add version.txt"
-git add version.txt
 git add CITATION.cff
 echo "git commit -m $GIT_COMMIT_MESSAGE"
 git commit -m "$GIT_COMMIT_MESSAGE"
