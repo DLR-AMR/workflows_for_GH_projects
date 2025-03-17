@@ -70,7 +70,6 @@ jobs:
                   # Extract the status field id
                   status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
                   echo "status_field_id is $status_field_id"
-                  # Get the option id for 'In Progress'
                   Progress_Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "In Progress") | .id')
                   echo "Progress_Option_id is $Progress_Option_id"
                   echo "change field $status_field_id of issue $issue_id in project $project_id to 'In Progress'"
