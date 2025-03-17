@@ -7,7 +7,7 @@ then
   if [ -d scripts ]
   then
     # The directory stack is automatically reset on script exit.
-    push scripts/ > /dev/null
+    pushd scripts/ > /dev/null
   else
     echo ERROR: scripts/ directory not found.
     exit 1
