@@ -87,3 +87,56 @@ jobs:
                 fi
               done
             done
+      - name: "Find associated Projects"
+          id: find_projects
+          if: env.NUMBER_IS_SET == 'false'
+          # There is no associated issue. We open an issue with the Title of the pull request as a title. 
+          # in the project "Choose Name"
+          # steps:
+          # 1. Open an issue in the project "Choose Name"
+          # 2. Get the issue number and ID of the opened issue
+          # 3. Assign the issue to the user who opened the pull request
+          # 4. Add "Closes #<issue_number>" to the pull request body
+          # 5. Set the issue to "Needs Review"
+          run: |
+          # Open an issue with the Title of the pull request as a title in the project "Choose Name"
+          issue=$(curl --request POST \
+                            --url https://api.github.com/graphql \
+                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                            --data '{"query":"mutation {createProjectV2Item(input: {projectId: \\\"YOUR_PROJECT_ID\\\", content: {title: \"'${{ github.event.pull_request.title }}'\"}}) {projectV2Item {id}}}" }')
+          echo "issue=$issue">> $GITHUB_OUTPUT
+          # Get the issue number and ID of the opened issue
+          issue_number=$(echo $issue | jq -r '.data.createProjectV2Item.projectV2Item.id')
+          issue_id=$(echo $issue | jq -r '.data.createProjectV2Item.projectV2Item.content.number')
+          echo "issue_number=$issue_number"
+          echo "issue_id=$issue_id"
+          # Assign the issue to the user who opened the pull request
+          assign_issue=$(curl --request POST \
+                            --url https://api.github.com/graphql \
+                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                            --data '{"query":"mutation {assignProjectV2Item(input: {projectId: \\\"YOUR_PROJECT_ID\\\", itemId: \"'$issue_id'\", assigneeIds: [\"'${{ github.event.pull_request.user.login }}'\"]}) {projectV2Item {id}}}" }')
+          echo "assign_issue=$assign_issue">> $GITHUB_OUTPUT
+          # Add "Closes #<issue_number>" to the pull request body
+          echo "Closes #$issue_number" >> $GITHUB_EVENT_PATH
+          # Set the issue to "Needs Review"
+          issue_project=$(curl --request POST \
+                        --url https://api.github.com/graphql \
+                        --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                        --data "{\"query\":\"{ node(id: \\\"$YOUR_PROJECT_ID\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } items(first: 100) { nodes { content { ... on Issue { id number } } } } } } }\"}")
+          # Get the status field id
+          status_field_id=$(echo $issue_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
+          echo "status_field_id is $status_field_id"
+          # Get the option id for 'Needs Review'
+          Needs_Review_Option_id=$(echo $issue_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "Needs Review") | .id')
+          echo "Needs_Review_Option_id is $Needs_Review_Option_id"
+          echo "change field $status_field_id of issue $issue_id in project $YOUR_PROJECT_ID to 'Needs Review'"
+          # Move the issue to the 'Needs Review' column
+          response=$(curl --request POST \
+            --url https://api.github.com/graphql \
+            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+            --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$YOUR_PROJECT_ID'\", itemId: \"'$issue_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Needs_Review_Option_id'\"}}) {projectV2Item {id}}}"}')
+
+          
+      
+
+
