@@ -33,7 +33,7 @@ jobs:
             # extract the priority value
             labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
             priority=$(echo "$labels" | grep -oE 'priority:(high|medium|low)' | cut -d: -f2)
-            echo "PRIORITY=$workload" >> $GITHUB_OUTPUT
+            echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
       - name: "Find associated Projects"
         id: find_projects
         # Find the projects associated with the organization
