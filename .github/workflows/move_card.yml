@@ -31,6 +31,7 @@ jobs:
             labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
             workload=$(echo "$labels" | grep -oE 'workload:(high|medium|low)' | cut -d: -f2)
             echo "WORKLOAD=$workload" >> $GITHUB_OUTPUT
+            echo "WORKLOAD=$WORKLOAD"
             echo "WORKLOAD_SET=$WORKLOAD_SET"
       - name: "Check if workload has not been set"
         id: check_workload_not_set
@@ -58,6 +59,7 @@ jobs:
             labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
             priority=$(echo "$labels" | grep -oE 'priority:(high|medium|low)' | cut -d: -f2)
             echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
+            echo "PRIORITY=$PRIORITY"
             echo "PRIORITY_SET=$PRIORITY_SET"
             echo "${{ github.event.action }}"
       - name: "Check if priority has not been set"
