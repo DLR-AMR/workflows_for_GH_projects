@@ -100,11 +100,18 @@ jobs:
               fi
               query=$(jq -n --arg status_message "$status_message" \
                               '{"query": $status_message}')
-              echo "query=$query"
+              # Construct a valid GraphQL mutation
+              mutation=$(cat <<EOF
+              mutation {
+                $status_message
+              }
+              EOF
+              )
+              echo "mutation=$mutation"
               response=$(curl --request POST \
                 --url https://api.github.com/graphql \
                 --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                --data "$query")
+                --data "{\"query\": \"$mutation\"}")
               echo "response=$response"
             fi
           done
