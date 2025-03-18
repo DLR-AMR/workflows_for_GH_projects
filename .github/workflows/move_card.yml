@@ -116,8 +116,8 @@ jobs:
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         COLUMN_NAME: 'ToDo'
-        PRIORITY: ${{ needs.evaluate.outputs.PRIORITY }}
-        WORKLOAD: ${{ needs.evaluate.outputs.WORKLOAD }}
+        PRIORITY: ${{ needs.evaluate_issues.outputs.PRIORITY }}
+        WORKLOAD: ${{ needs.evaluate_issues.outputs.WORKLOAD }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
   
