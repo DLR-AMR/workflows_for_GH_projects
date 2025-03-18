@@ -30,9 +30,9 @@ jobs:
     - name: "Move card in projects"
       id: move_cards
       run: |
-        ISSUE_NODE_ID="${{ github.event.inputs.ISSUE_NODE_ID }}"
-        PRIORITY="${{ github.event.inputs.PRIORITY }}"
-        WORKLOAD="${{ github.event.inputs.WORKLOAD }}"
+        ISSUE_NODE_ID="${{ inputs.ISSUE_NODE_ID }}"
+        PRIORITY="${{ inputs.PRIORITY }}"
+        WORKLOAD="${{ inputs.WORKLOAD }}"
         echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
         echo "PRIORITY=$PRIORITY"
         echo "WORKLOAD=$WORKLOAD"
