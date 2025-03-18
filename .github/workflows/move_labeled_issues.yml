@@ -101,6 +101,7 @@ jobs:
             # Debug output!
             echo "NUMBER_IS_SET=$NUMBER_IS_SET"
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
+            echo "${{ github.event.action }}"
 
   move_card_to_ToDo:
     needs: [evaluate_issues]
