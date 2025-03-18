@@ -7,6 +7,11 @@ on:
 jobs:
   evaluate:
     runs-on: ubuntu-latest
+    outputs:
+      WORKLOAD_SET: ${{ steps.check_workload.outputs.WORKLOAD_SET }}
+      PRIORITY_SET: ${{ steps.check_urgency.outputs.PRIORITY_SET }}
+      WORKLOAD: ${{ steps.check_workload.outputs.WORKLOAD }}
+      PRIORITY: ${{ steps.check_urgency.outputs.PRIORITY }}
     steps:
       - name: "Check if workload is set"
         id: check_workload
@@ -41,8 +46,8 @@ jobs:
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         COLUMN_NAME: "ToDo"
-        PRIORITY: ${{ needs.evaluate.outputs.check_urgency.outputs.PRIORITY }}
-        WORKLOAD: ${{ needs.evaluate.outputs.check_workload.outputs.WORKLOAD }}
+        PRIORITY: ${{ needs.evaluate.outputs.PRIORITY }}
+        WORKLOAD: ${{ needs.evaluate.outputs.WORKLOAD }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
