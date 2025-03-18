@@ -1,112 +1,169 @@
-name: Move an Issue Card to a different Column triggered by an Issue event
+name: "Move the Issue after workload and urgency is evaluated"
 
 on:
-  workflow_call:
-    inputs:
-      ISSUE_NODE_ID:
-        required: true
-        type: string
-        description: 'The node id of the issue that triggered the workflow'
-      COLUMN_NAME:
-        type: string
-        default: 'In-Box'
-        description: 'The name of the column to move the issue card to'
-      PRIORITY:
-        type: string
-        default: 'NONE'
-        description: 'The priority of the issue'
-      WORKLOAD:
-        type: string
-        default: 'NONE'
-        description: 'The workload of the issue'
-    secrets:
-        PAT:
-          required: true
+  issues:
+    types: [labeled, assigned, unassigned, unlabeled]
+  pull_request:
+    types: [opened, reopened, ready_for_review, assigned, unassigned]
 
 jobs:
-  Move_card:
+  evaluate_issues:
+    if: ${{ github.event_name == 'issues' }}
     runs-on: ubuntu-latest
+    outputs:
+      WORKLOAD_SET: ${{ steps.check_workload.outputs.WORKLOAD_SET || 'false' }}
+      PRIORITY_SET: ${{ steps.check_urgency.outputs.PRIORITY_SET || 'false' }}
+      WORKLOAD: ${{ steps.check_workload.outputs.WORKLOAD || 'false' }}
+      PRIORITY: ${{ steps.check_urgency.outputs.PRIORITY || 'false' }}
     steps:
-    - name: "Move card in projects"
-      id: move_cards
-      run: |
-        ISSUE_NODE_ID="${{ inputs.ISSUE_NODE_ID }}"
-        PRIORITY="${{ inputs.PRIORITY }}"
-        WORKLOAD="${{ inputs.WORKLOAD }}"
-        COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
-        echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
-        echo "PRIORITY=$PRIORITY"
-        echo "WORKLOAD=$WORKLOAD"
-        echo "COLUMN_NAME=$COLUMN_NAME"
-        # Get the projects associated with the organization
-        projects=$(curl --request POST \
-            --url https://api.github.com/graphql \
-            --header "Authorization: Bearer ${{ secrets.PAT }}" \
-            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
-        echo "projects=$projects"
-        # Get the project IDs
-        project_ids=$(echo $projects | jq -r '.data.organization.projectsV2.nodes[].id')
-        for project_id in $project_ids; do
-          echo "project_id is $project_id"
-          # Get the issues within the project
-          issues=$(curl --request POST \
-            --url https://api.github.com/graphql \
-            --header "Authorization: Bearer ${{ secrets.PAT }}" \
-            --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } } } }\"}")
-          echo "issues=$issues"
-          # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
-          issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
-          PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
-          # In the following loop we need both values, so we combine them into a single string
-          combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
-          for combined_id in $combined_ids; do
-            issue_id=$(echo $combined_id | cut -d, -f1)
-            echo "issue_id is $issue_id"
-            PVII_id=$(echo $combined_id | cut -d, -f2)
-            echo "PVII_id is $PVII_id"
-            if [ "$issue_id" == "$ISSUE_NODE_ID" ]; then
-              # Get the detailed project informationputs.ISSUE_NODE_ID }}" ]; then
-              # Get the detailed project information
-              detailed_project=$(curl --request POST \
-                --url https://api.github.com/graphql \
-                --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
-              echo "detailed_project=$detailed_project"
-              # Extract the status field id
-              status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
-              Option_id=$(echo $detailed_project | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
-              echo "Option_id is $Option_id"
-              echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
-              # Move the issue to the specified column
-              priority_message=""
-              workload_message=""
-              if [ "$PRIORITY" != 'NONE' ]; then
-                priority_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .id')
-                priority_option_id=$(echo $detailed_project | jq -r --arg PRIORITY "$PRIORITY" '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == $PRIORITY) | .id')
-                priority_message="updateProjectV2ItemFieldValue1: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$priority_field_id'\", value: { singleSelectOptionId: \"'$priority_option_id'\"}}) {projectV2Item {id}}"
-                echo "priority_message is $priority_message"
-              fi
-              if [ "$WORKLOAD" != 'NONE' ]; then
-                workload_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .id')
-                workload_option_id=$(echo $detailed_project | jq -r --arg WORKLOAD "$WORKLOAD" '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == $WORKLOAD) | .id')
-                echo "workload_message is $workload_message"
-              fi
-              status_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}"
-              # dynamically build the query. If the priority or workload is not set, the corresponding message will be empty.
-              # It is piped to a second jq command to remove null values and extra spaces  
-              query=$(jq -n --arg sm "$status_message" \
-                      --arg pm "$priority_message" \
-                      --arg wm "$workload_message" \
-                      '{"query": "mutation { \($sm) \($pm) \($wm) }"}' | \
-                    jq '.query |= gsub("null"; "") | .query |= gsub("\\s+"; " ") | .query |= sub("\\{\\s*\\}"; "{}")' | \
-                    sed 's/\\\\"/"/g' | \
-                    sed "s/'//g")
-              echo "query=$query"
-              response=$(curl --request POST \
-                --url https://api.github.com/graphql \
-                --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                --data "$query")
-              echo "response=$response"
+      - name: "Check if workload is set"
+        id: check_workload
+        # Check if the issue has a workload label
+        if: |
+          contains(join(github.event.issue.labels.*.name, ','), 'workload:high') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
+        run: |
+            # Set WORKLOAD_SET to true
+            WORKLOAD_SET=true
+            echo "WORKLOAD_SET=$WORKLOAD_SET" >> $GITHUB_OUTPUT
+            # extract the workload value
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            workload=$(echo "$labels" | grep -oE 'workload:(high|medium|low)' | cut -d: -f2)
+            echo "WORKLOAD=$workload" >> $GITHUB_OUTPUT
+            echo "WORKLOAD_SET=$WORKLOAD_SET"
+      - name: "Check if workload has not been set"
+        id: check_workload_not_set
+        if: |
+          !contains(join(github.event.issue.labels.*.name, ','), 'workload:high') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
+        run: |
+            # Set WORKLOAD_SET to false
+            WORKLOAD_SET=false
+            echo "WORKLOAD_SET=$WORKLOAD_SET" >> $GITHUB_OUTPUT
+            echo "WORKLOAD_SET=$WORKLOAD_SET"
+      - name: "Check if priority is set"
+        id: check_urgency
+        # Check if the issue has a priority label
+        if: |
+          contains(join(github.event.issue.labels.*.name, ','), 'priority:high') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
+        run: |
+            # Set PRIORITY_SET to true
+            PRIORITY_SET=true
+            echo "PRIORITY_SET=$PRIORITY_SET" >> $GITHUB_OUTPUT
+            # extract the priority value
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            priority=$(echo "$labels" | grep -oE 'priority:(high|medium|low)' | cut -d: -f2)
+            echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
+            echo "PRIORITY_SET=$PRIORITY_SET"
+            echo "${{ github.event.action }}"
+      - name: "Check if priority has not been set"
+        id: check_urgency_not_set
+        if: |
+          !contains(join(github.event.issue.labels.*.name, ','), 'priority:high') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
+        run: |
+            # Set PRIORITY_SET to false
+            PRIORITY_SET=false
+            echo "PRIORITY_SET=$PRIORITY_SET" >> $GITHUB_OUTPUT
+            echo "PRIORITY_SET=$PRIORITY_SET"
+  
+  evaluate_pr:
+    runs-on: ubuntu-latest
+    outputs:
+      NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
+      CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: "Get link between PR and Issue"
+        id: get_pr_issue_link
+        run: |
+            # Extract the issue number from the pull request body
+            ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+')
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+            # If no issue number is found, set NUMBER_IS_SET to false
+            if [ -z "$ISSUE_NUMBER" ]; then
+                echo "No issue number found in the pull request body."
+                NUMBER_IS_SET=false
+                echo "NUMBER_IS_SET=$NUMBER_IS_SET" >> $GITHUB_OUTPUT
+                echo "NUMBER_IS_SET=$NUMBER_IS_SET"
             fi
-          done
-        done
+            # Remove the '#' from the issue number
+            CLEAN_ISSUE_NUMBER=$(echo $ISSUE_NUMBER | tr -d '#')
+            # Set the cleaned issue number and NUMBER_IS_SET to true
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
+            NUMBER_IS_SET=true
+            echo "NUMBER_IS_SET=true" >> $GITHUB_OUTPUT
+            # Debug output!
+            echo "NUMBER_IS_SET=$NUMBER_IS_SET"
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
+            echo "${{ github.event.action }}"
+
+  move_card_to_ToDo:
+    needs: [evaluate_issues]
+    if: ${{ github.event.action == 'labeled' && needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' }}
+    uses: ./.github/workflows/issue_event_moves_card.yml
+    with:
+        ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        COLUMN_NAME: 'ToDo'
+        PRIORITY: ${{ needs.evaluate.outputs.PRIORITY }}
+        WORKLOAD: ${{ needs.evaluate.outputs.WORKLOAD }}
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+  
+  move_card_to_InProgress:
+    needs: [evaluate_issues]
+    if: ${{ needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' && github.event.action == 'assigned' }}
+    uses: ./.github/workflows/issue_event_moves_card.yml
+    with:
+        ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        COLUMN_NAME: 'In Progress'
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+
+  move_card_back_to_ToDo:
+    needs: [evaluate_issues]
+    if: ${{ needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' && github.event.action == 'unassigned' }}
+    uses: ./.github/workflows/issue_event_moves_card.yml
+    with:
+        ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        COLUMN_NAME: 'ToDo'
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+  
+  move_card_back_to_In-Box:
+    needs: [evaluate_issues]
+    if: ${{ github.event.action == 'unlabeled' && (needs.evaluate_issues.outputs.WORKLOAD_SET == 'false' || needs.evaluate_issues.outputs.PRIORITY_SET == 'false') }}
+    uses: ./.github/workflows/issue_event_moves_card.yml
+    with:
+        ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        COLUMN_NAME: 'In-Box'
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+
+  move_card_to_Needs_Review:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && (github.event.action == 'opened' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        COLUMN_NAME: 'Needs Review'
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+
+  move_card_to_In_Review:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'assigned' }}
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        COLUMN_NAME: 'In Review'
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+
+
+
