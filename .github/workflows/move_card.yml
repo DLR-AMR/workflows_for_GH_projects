@@ -11,6 +11,18 @@ on:
                 required: true
                 type: string
                 description: 'The name of the column to move the issue card to'
+            PRIORITY:
+                required: true
+                type: choice
+                options: ['high', 'medium', 'low', 'NONE']
+                default: 'NONE'
+                description: 'The priority of the issue'
+            WORKLOAD:
+                required: true
+                type: choice
+                options: ['high', 'medium', 'low', 'NONE']
+                default: 'NONE'
+                description: 'The workload of the issue'
 
 
 jobs:
@@ -62,10 +74,26 @@ jobs:
                             echo "Option_id is $Option_id"
                             echo "change field $status_field_id of issue $issue_id in project $project_id to '${{ github.event.inputs.COLUMN_NAME }}'"
                             # Move the issue to the specified column
+                            priority_message=""
+                            workload_message=""
+                            if [ '${{ github.event.inputs.PRIORITY }}' != 'NONE' ]; then
+                                priority_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .id')
+                                priority_Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == "${{ github.event.inputs.PRIORITY }}") | .id')
+                                priority_message="updateProjectV2ItemFieldValue1: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$priority_field_id'\", value: { singleSelectOptionId: \"'$priority_option_id'\"}}) {projectV2Item {id}}"
+                                echo "priority_message is $priority_message"
+                            fi
+                            if [ '${{ github.event.inputs.WORKLOAD }}' != 'NONE' ]; then
+                                workload_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .id')
+                                workload_Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == "${{ github.event.inputs.WORKLOAD }}") | .id')
+                                workload_message="updateProjectV2ItemFieldValue2: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$workload_field_id'\", value: { singleSelectOptionId: \"'$workload_option_id'\"}}) {projectV2Item {id}}"
+                                echo "workload_message is $workload_message"
+                            fi
+                            status_message="updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}"
+                            query="{\"query\":\"mutation { $status_message $priority_message $workload_message }\"}"
                             response=$(curl --request POST \
                                 --url https://api.github.com/graphql \
                                 --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                                --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}}"}')
+                                --data "$query")
                             echo "response=$response"
                         fi
                     done
