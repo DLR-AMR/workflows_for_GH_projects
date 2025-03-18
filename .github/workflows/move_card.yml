@@ -33,7 +33,7 @@ jobs:
         ISSUE_NODE_ID="${{ inputs.ISSUE_NODE_ID }}"
         PRIORITY="${{ inputs.PRIORITY }}"
         WORKLOAD="${{ inputs.WORKLOAD }}"
-        COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
+        COLUMN_NAME="\"${{ inputs.COLUMN_NAME }}\""
         echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
         echo "PRIORITY=$PRIORITY"
         echo "WORKLOAD=$WORKLOAD"
