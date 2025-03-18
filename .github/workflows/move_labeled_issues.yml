@@ -41,7 +41,7 @@ jobs:
           ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
       - name: "Move issue to 'ToDo' column in associated projects"
-        if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
+        if: ${{ env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true' }}
         uses: ./.github/workflows/move_card.yml
         with:
             ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
