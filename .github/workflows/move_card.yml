@@ -92,7 +92,14 @@ jobs:
                 echo "workload_message is $workload_message"
               fi
               status_message="updateProjectV2ItemFieldValue(input: {projectId: \\\"$project_id\\\", itemId: \\\"$PVII_id\\\", fieldId: \\\"$status_field_id\\\", value: { singleSelectOptionId: \\\"$Option_id\\\"}}) {projectV2Item {id}}"
-              query=$(jq -n --arg sm "$status_message" --arg pm "$priority_message" --arg wm "$workload_message" '{"query": "mutation { \($sm) \($pm) \($wm) }"}' | sed 's/\\\\"/"/g')
+              if [ "$PRIORITY" != 'NONE' ]; then
+              status_message="$status_message $priority_message"
+              fi
+              if [ "$WORKLOAD" != 'NONE' ]; then
+              status_message="$status_message $workload_message"
+              fi
+              query=$(jq -n --arg status_message "$status_message" \
+                              '{"query": $status_message}')
               echo "query=$query"
               response=$(curl --request POST \
                 --url https://api.github.com/graphql \
