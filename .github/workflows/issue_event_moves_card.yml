@@ -92,7 +92,11 @@ jobs:
                 echo "workload_message is $workload_message"
               fi
               status_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}"
-                query=$(jq -n --arg sm "$status_message" \
+              # Construct the query to move the issue to the specified column.
+              # The query is a mutation that updates the status, priority, and workload fields of the issue.
+              # If priority or workload are not set, the corresponding message is empty.
+              # The query is constructed using jq and sed to remove null values and extra whitespace.
+              query=$(jq -n --arg sm "$status_message" \
                       --arg pm "$priority_message" \
                       --arg wm "$workload_message" \
                       '{"query": "mutation { \($sm) \($pm) \($wm) }"}' | \
