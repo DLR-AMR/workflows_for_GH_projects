@@ -35,6 +35,7 @@ jobs:
             echo "WORKLOAD=$WORKLOAD" >> $GITHUB_OUTPUT
             echo "WORKLOAD=$WORKLOAD"
             echo "WORKLOAD_SET=$WORKLOAD_SET"
+            echo "${{ github.event.action }}"
       - name: "Check if workload has not been set"
         id: check_workload_not_set
         if: |
