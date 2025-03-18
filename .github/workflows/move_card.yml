@@ -81,13 +81,13 @@ jobs:
               workload_message=""
               if [ "$PRIORITY" != 'NONE' ]; then
                 priority_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .id')
-                priority_option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == $PRIORITY) | .id')
+                priority_option_id=$(echo $detailed_project | jq -r --arg PRIORITY "$PRIORITY" '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == $PRIORITY) | .id')
                 priority_message="updateProjectV2ItemFieldValue1: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$priority_field_id'\", value: { singleSelectOptionId: \"'$priority_option_id'\"}}) {projectV2Item {id}}"
                 echo "priority_message is $priority_message"
               fi
               if [ "$WORKLOAD" != 'NONE' ]; then
                 workload_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .id')
-                workload_option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == $WORKLOAD) | .id')
+                workload_option_id=$(echo $detailed_project | jq -r --arg WORKLOAD "$WORKLOAD" '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == $WORKLOAD) | .id')
                 workload_message="updateProjectV2ItemFieldValue2: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$workload_field_id'\", value: { singleSelectOptionId: \"'$workload_option_id'\"}}) {projectV2Item {id}}"
                 echo "workload_message is $workload_message"
               fi
