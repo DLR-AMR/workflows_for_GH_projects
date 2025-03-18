@@ -45,6 +45,7 @@ jobs:
             priority=$(echo "$labels" | grep -oE 'priority:(high|medium|low)' | cut -d: -f2)
             echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
             echo "PRIORITY_SET=$PRIORITY_SET"
+            echo "${{ github.event_name }}"
 
   move_card_to_ToDo:
     needs: [evaluate]
