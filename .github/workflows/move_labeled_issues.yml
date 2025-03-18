@@ -85,7 +85,7 @@ jobs:
     uses: ./.github/workflows/move_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
-        COLUMN_NAME: 'ToDo'
+        COLUMN_NAME: 'In-Box'
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
