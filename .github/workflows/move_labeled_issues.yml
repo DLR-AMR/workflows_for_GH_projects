@@ -59,6 +59,8 @@ jobs:
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         COLUMN_NAME: 'In Progress'
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
 
 
 
