@@ -11,10 +11,10 @@ jobs:
     if: ${{ github.event_name == 'issues' }}
     runs-on: ubuntu-latest
     outputs:
-      WORKLOAD_SET: ${{ steps.check_workload.outputs.WORKLOAD_SET }}
-      PRIORITY_SET: ${{ steps.check_urgency.outputs.PRIORITY_SET }}
-      WORKLOAD: ${{ steps.check_workload.outputs.WORKLOAD }}
-      PRIORITY: ${{ steps.check_urgency.outputs.PRIORITY }}
+      WORKLOAD_SET: ${{ steps.check_workload.outputs.WORKLOAD_SET || 'false' }}
+      PRIORITY_SET: ${{ steps.check_urgency.outputs.PRIORITY_SET || 'false' }}
+      WORKLOAD: ${{ steps.check_workload.outputs.WORKLOAD || 'false' }}
+      PRIORITY: ${{ steps.check_urgency.outputs.PRIORITY || 'false' }}
     steps:
       - name: "Check if workload is set"
         id: check_workload
@@ -31,6 +31,17 @@ jobs:
             labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
             workload=$(echo "$labels" | grep -oE 'workload:(high|medium|low)' | cut -d: -f2)
             echo "WORKLOAD=$workload" >> $GITHUB_OUTPUT
+            echo "WORKLOAD_SET=$WORKLOAD_SET"
+      - name: "Check if workload has not been set"
+        id: check_workload_not_set
+        if: |
+          !contains(join(github.event.issue.labels.*.name, ','), 'workload:high') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
+        run: |
+            # Set WORKLOAD_SET to false
+            WORKLOAD_SET=false
+            echo "WORKLOAD_SET=$WORKLOAD_SET" >> $GITHUB_OUTPUT
             echo "WORKLOAD_SET=$WORKLOAD_SET"
       - name: "Check if priority is set"
         id: check_urgency
@@ -49,6 +60,17 @@ jobs:
             echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
             echo "PRIORITY_SET=$PRIORITY_SET"
             echo "${{ github.event.action }}"
+      - name: "Check if priority has not been set"
+        id: check_urgency_not_set
+        if: |
+          !contains(join(github.event.issue.labels.*.name, ','), 'priority:high') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
+        run: |
+            # Set PRIORITY_SET to false
+            PRIORITY_SET=false
+            echo "PRIORITY_SET=$PRIORITY_SET" >> $GITHUB_OUTPUT
+            echo "PRIORITY_SET=$PRIORITY_SET"
   
   evaluate_pr:
     runs-on: ubuntu-latest
@@ -73,13 +95,13 @@ jobs:
             # Set the cleaned issue number and NUMBER_IS_SET to true
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
             echo "NUMBER_IS_SET=true" >> $GITHUB_ENV
-            # Debug output
+            # Debug output!
             echo "NUMBER_IS_SET=$NUMBER_IS_SET"
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
 
   move_card_to_ToDo:
     needs: [evaluate_issues]
-    if: ${{ github.event.action == 'labeled' && needs.evaluate.outputs.WORKLOAD_SET == 'true' && needs.evaluate.outputs.PRIORITY_SET == 'true' }}
+    if: ${{ github.event.action == 'labeled' && needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' }}
     uses: ./.github/workflows/move_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
@@ -91,7 +113,7 @@ jobs:
   
   move_card_to_InProgress:
     needs: [evaluate_issues]
-    if: ${{ needs.evaluate.outputs.WORKLOAD_SET == 'true' && needs.evaluate.outputs.PRIORITY_SET == 'true' && github.event.action == 'assigned' }}
+    if: ${{ needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' && github.event.action == 'assigned' }}
     uses: ./.github/workflows/move_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
@@ -101,7 +123,7 @@ jobs:
 
   move_card_back_to_ToDo:
     needs: [evaluate_issues]
-    if: ${{ needs.evaluate.outputs.WORKLOAD_SET == 'true' && needs.evaluate.outputs.PRIORITY_SET == 'true' && github.event.action == 'unassigned' }}
+    if: ${{ needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' && github.event.action == 'unassigned' }}
     uses: ./.github/workflows/move_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
@@ -111,7 +133,7 @@ jobs:
   
   move_card_back_to_In-Box:
     needs: [evaluate_issues]
-    if: ${{ needs.evaluate.outputs.WORKLOAD_SET != 'true' || needs.evaluate.outputs.PRIORITY_SET != 'true' && github.event.action == 'unlabeled' }}
+    if: ${{ github.event.action == 'unlabeled' && (needs.evaluate_issues.outputs.WORKLOAD_SET == 'false' || needs.evaluate_issues.outputs.PRIORITY_SET == 'false') }}
     uses: ./.github/workflows/move_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
