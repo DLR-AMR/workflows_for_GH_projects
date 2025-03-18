@@ -92,26 +92,17 @@ jobs:
                 echo "workload_message is $workload_message"
               fi
               status_message="updateProjectV2ItemFieldValue(input: {projectId: \\\"$project_id\\\", itemId: \\\"$PVII_id\\\", fieldId: \\\"$status_field_id\\\", value: { singleSelectOptionId: \\\"$Option_id\\\"}}) {projectV2Item {id}}"
-              if [ "$PRIORITY" != 'NONE' ]; then
-              status_message="$status_message $priority_message"
-              fi
-              if [ "$WORKLOAD" != 'NONE' ]; then
-              status_message="$status_message $workload_message"
-              fi
-              query=$(jq -n --arg status_message "$status_message" \
-                              '{"query": $status_message}')
-              # Construct a valid GraphQL mutation
-              mutation=$(cat <<EOF
-              mutation {
-                $status_message
-              }
-              EOF
-              )
-              echo "mutation=$mutation"
+              query=$(jq -n --arg sm "$status_message" \
+                            --arg pm "$priority_message" \
+                            --arg wm "$workload_message" \
+                            '{"query": "mutation { \($sm) \($pm) \($wm) }"}' | \
+                      jq 'if .query | contains("null") then .query |= gsub("null"; "") | .query |= gsub("\\s+"; " ") else . end' | \
+                      sed 's/\\\\"/"/g')
+              echo "query=$query"
               response=$(curl --request POST \
                 --url https://api.github.com/graphql \
                 --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                --data "{\"query\": \"$mutation\"}")
+                --data "$query")
               echo "response=$response"
             fi
           done
