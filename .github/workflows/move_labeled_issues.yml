@@ -50,7 +50,6 @@ jobs:
           echo "projects=$projects">> $GITHUB_OUTPUT
       - name: "Move issue to 'ToDo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
-        secrets: inherit
         uses: ./.github/workflows/move_card.yml
         with: 
             ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
