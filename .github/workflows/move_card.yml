@@ -30,6 +30,12 @@ jobs:
     - name: "Move card in projects"
       id: move_cards
       run: |
+        ISSUE_NODE_ID="${{ github.event.inputs.ISSUE_NODE_ID }}"
+        PRIORITY="${{ github.event.inputs.PRIORITY }}"
+        WORKLOAD="${{ github.event.inputs.WORKLOAD }}"
+        echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
+        echo "PRIORITY=$PRIORITY"
+        echo "WORKLOAD=$WORKLOAD"
         # Get the projects associated with the organization
         projects=$(curl --request POST \
             --url https://api.github.com/graphql \
@@ -56,8 +62,8 @@ jobs:
             echo "issue_id is $issue_id"
             PVII_id=$(echo $combined_id | cut -d, -f2)
             echo "PVII_id is $PVII_id"
-            # Check if the issue_id is the same as the one in the pull request
-            if [ "$issue_id" == "${{ github.event.inputs.ISSUE_NODE_ID }}" ]; then
+            if [ "$issue_id" == "$ISSUE_NODE_ID" ]; then
+              # Get the detailed project informationputs.ISSUE_NODE_ID }}" ]; then
               # Get the detailed project information
               detailed_project=$(curl --request POST \
                 --url https://api.github.com/graphql \
@@ -66,21 +72,24 @@ jobs:
               echo "detailed_project=$detailed_project"
               # Extract the status field id
               status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
-              Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "${{ github.event.inputs.COLUMN_NAME }}") | .id')
+              column_name="${{ github.event.inputs.COLUMN_NAME }}"
+              Option_id=$(echo $detailed_project | jq -r --arg column_name "$column_name" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $column_name) | .id')
               echo "Option_id is $Option_id"
               echo "change field $status_field_id of issue $issue_id in project $project_id to '${{ github.event.inputs.COLUMN_NAME }}'"
               # Move the issue to the specified column
               priority_message=""
               workload_message=""
-              if [ '${{ github.event.inputs.PRIORITY }}' != 'NONE' ]; then
+              if [ "$PRIORITY" != 'NONE' ]; then
+                priority_name="$PRIORITY"
                 priority_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .id')
-                priority_option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == "${{ github.event.inputs.PRIORITY }}") | .id')
+                priority_option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == $priority_name) | .id')
                 priority_message="updateProjectV2ItemFieldValue1: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$priority_field_id'\", value: { singleSelectOptionId: \"'$priority_option_id'\"}}) {projectV2Item {id}}"
                 echo "priority_message is $priority_message"
               fi
-              if [ '${{ github.event.inputs.WORKLOAD }}' != 'NONE' ]; then
+              if [ "$WORKLOAD" != 'NONE' ]; then
+                workload_name="${{ github.event.inputs.WORKLOAD }}"
                 workload_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .id')
-                workload_option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == "${{ github.event.inputs.WORKLOAD }}") | .id')
+                workload_option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == $workload_name) | .id')
                 workload_message="updateProjectV2ItemFieldValue2: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$workload_field_id'\", value: { singleSelectOptionId: \"'$workload_option_id'\"}}) {projectV2Item {id}}"
                 echo "workload_message is $workload_message"
               fi
