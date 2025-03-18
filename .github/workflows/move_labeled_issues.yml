@@ -34,15 +34,6 @@ jobs:
             labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
             priority=$(echo "$labels" | grep -oE 'priority:(high|medium|low)' | cut -d: -f2)
             echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
-      - name: "Find associated Projects"
-        id: find_projects
-        # Find the projects associated with the organization
-        run: |
-          projects=$(curl --request POST \
-                            --url https://api.github.com/graphql \
-                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
-          echo "projects=$projects">> $GITHUB_OUTPUT
       - name: "Checkout repository"
         uses: actions/checkout@v4
         with: 
@@ -52,10 +43,8 @@ jobs:
       - name: "Move issue to 'ToDo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         uses: ./.github/workflows/move_card.yml
-        with: 
+        with:
             ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
             COLUMN_NAME: "ToDo"
             PRIORITY: ${{ steps.check_urgency.outputs.PRIORITY }}
             WORKLOAD: ${{ steps.check_workload.outputs.WORKLOAD }}
-        
-            
