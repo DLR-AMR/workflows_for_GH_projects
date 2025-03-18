@@ -88,13 +88,13 @@ jobs:
             # If no issue number is found, set NUMBER_IS_SET to false
             if [ -z "$ISSUE_NUMBER" ]; then
                 echo "No issue number found in the pull request body."
-                echo "NUMBER_IS_SET=false" >> $GITHUB_ENV
+                echo "NUMBER_IS_SET=false" >> $GITHUB_OUTPUT
             fi
             # Remove the '#' from the issue number
             CLEAN_ISSUE_NUMBER=$(echo $ISSUE_NUMBER | tr -d '#')
             # Set the cleaned issue number and NUMBER_IS_SET to true
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
-            echo "NUMBER_IS_SET=true" >> $GITHUB_ENV
+            echo "NUMBER_IS_SET=true" >> $GITHUB_OUTPUT
             # Debug output!
             echo "NUMBER_IS_SET=$NUMBER_IS_SET"
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
