@@ -16,27 +16,4 @@ jobs:
           contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') ||
           contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
         run: |
-            echo "WORKLOAD_SET=true" >> $GITHUB_ENV
-      - name: "Check if priority is set"
-        id: check_urgency
-        if: |
-          contains(join(github.event.issue.labels.*.name, ','), 'priority:high') ||
-          contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') ||
-          contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
-        run: |
-            echo "PRIORITY_SET=true" >> $GITHUB_ENV
-      - name: "Find associated Projects"
-        id: find_projects
-        # Find the projects associated with the organization
-        run: |
-          projects=$(curl --request POST \
-                            --url https://api.github.com/graphql \
-                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
-          echo "projects=$projects">> $GITHUB_OUTPUT
-      - name: "Move issue to In Progress column in associated projects"
-        if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
-        uses: ./.github/workflows/move_card.yml
-        with: 
-            ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
-            COLUMN_NAME: "In Progress"
+            echo "WORKLOAD_SET=true"
