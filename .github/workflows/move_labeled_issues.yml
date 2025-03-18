@@ -41,7 +41,7 @@ jobs:
             echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
   move_card:
     needs: [evaluate]
-    if: ${{ needs.evaluate.outputs.WORKLOAD_SET == 'true' && needs.evaluate.outputs.PRIORITY_SET == 'true' }}
+    if: needs.evaluate.outputs.WORKLOAD_SET == 'true' && needs.evaluate.outputs.PRIORITY_SET == 'true'
     uses: ./.github/workflows/move_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
