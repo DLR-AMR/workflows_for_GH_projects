@@ -8,11 +8,6 @@ jobs:
   evaluate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with: 
-          repository: ${{ github.event.repository.full_name }}
-          ref: ${{ github.event.repository.default_branch }}
-          fetch-depth: 0
       - name: "Check if workload is set"
         id: check_workload
         # Check if the issue has a workload label
@@ -48,6 +43,12 @@ jobs:
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                             --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
           echo "projects=$projects">> $GITHUB_OUTPUT
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+        with: 
+          repository: ${{ github.event.repository.full_name }}
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
       - name: "Move issue to 'ToDo' column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
         uses: ./.github/workflows/move_card.yml
