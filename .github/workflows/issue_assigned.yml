@@ -34,51 +34,9 @@ jobs:
                             --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
                             --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
           echo "projects=$projects">> $GITHUB_OUTPUT
-      - name: "Move issue to 'Todo' column in associated projects"
+      - name: "Move issue to In Progress column in associated projects"
         if: env.WORKLOAD_SET == 'true' && env.PRIORITY_SET == 'true'
-        run: |
-            # Get the project IDs
-            project_ids=$(echo '${{ steps.find_projects.outputs.projects }}' | jq -r '.data.organization.projectsV2.nodes[].id')
-            echo "project_ids=${project_ids}"
-            echo "searching for issue ${{ github.event.issue.node_id }}"
-            for project_id in $project_ids; do
-              echo "project_id is $project_id"
-              # Get the issues within the project
-              issues=$(curl --request POST \
-                            --url https://api.github.com/graphql \
-                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                            --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } } } } }\"}")
-              echo "issues=$issues"
-              # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
-              issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
-              PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
-              # In the following loop we need both values, so we combine them into a single string
-              combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
-              for combined_id in $combined_ids; do
-                issue_id=$(echo $combined_id | cut -d, -f1)
-                PVII_id=$(echo $combined_id | cut -d, -f2)
-                echo "issue_id is $issue_id"
-                echo "PVII_id is $PVII_id"
-                # Check if the issue_id is the same as the one in the event
-                if [ $issue_id == '${{ github.event.issue.node_id }}' ]; then
-                  # Get the detailed project information
-                    detailed_project=$(curl --request POST \
-                        --url https://api.github.com/graphql \
-                        --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                        --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
-                  echo "detailed_project=$detailed_project"
-                  # Extract the status field id
-                  status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
-                  echo "status_field_id is $status_field_id"
-                  Progress_Option_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == "In Progress") | .id')
-                  echo "Progress_Option_id is $Progress_Option_id"
-                  echo "change field $status_field_id of issue $issue_id in project $project_id to 'In Progress'"
-                  # Move the issue to the 'In Progress' column
-                  response=$(curl --request POST \
-                    --url https://api.github.com/graphql \
-                    --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
-                    --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Progress_Option_id'\"}}) {projectV2Item {id}}}"}')
-                  echo "response=$response"
-                fi
-              done
-            done
+        uses: ./.github/workflows/move_card.yml
+        with: 
+            ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+            COLUMN_NAME: "In Progress"
