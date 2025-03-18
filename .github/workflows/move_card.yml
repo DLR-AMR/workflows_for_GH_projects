@@ -97,7 +97,8 @@ jobs:
                             --arg wm "$workload_message" \
                             '{"query": "mutation { \($sm) \($pm) \($wm) }"}' | \
                       jq 'if .query | contains("null") then .query |= gsub("null"; "") | .query |= gsub("\\s+"; " ") else . end' | \
-                      sed 's/\\\\"/"/g')
+                      sed 's/\\\\"/"/g' | \
+                      sed "s/'//g")
               echo "query=$query"
               response=$(curl --request POST \
                 --url https://api.github.com/graphql \
