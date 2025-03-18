@@ -63,7 +63,7 @@ jobs:
                         PVII_id=$(echo $combined_id | cut -d, -f2)
                         echo "PVII_id is $PVII_id"
                         # Check if the issue_id is the same as the one in the pull request
-                        if [ $issue_id == '${{ github.event.inputs.ISSUE_NODE_ID }}' ]; then
+                        if [ "$issue_id" == "${{ github.event.inputs.ISSUE_NODE_ID }}" ]; then
                                               # Get the detailed project information
                             detailed_project=$(curl --request POST \
                                 --url https://api.github.com/graphql \
