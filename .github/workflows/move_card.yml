@@ -89,10 +89,9 @@ jobs:
               if [ "$WORKLOAD" != 'NONE' ]; then
                 workload_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .id')
                 workload_option_id=$(echo $detailed_project | jq -r --arg WORKLOAD "$WORKLOAD" '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == $WORKLOAD) | .id')
-                workload_message="updateProjectV2ItemFieldValue2: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$workload_field_id'\", value: { singleSelectOptionId: \"'$workload_option_id'\"}}) {projectV2Item {id}}"
                 echo "workload_message is $workload_message"
               fi
-              status_message="updateProjectV2ItemFieldValue(input: {projectId: \\\"$project_id\\\", itemId: \\\"$PVII_id\\\", fieldId: \\\"$status_field_id\\\", value: { singleSelectOptionId: \\\"$Option_id\\\"}}) {projectV2Item {id}}"
+              status_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}"
               query=$(jq -n --arg sm "$status_message" \
                             --arg pm "$priority_message" \
                             --arg wm "$workload_message" \
