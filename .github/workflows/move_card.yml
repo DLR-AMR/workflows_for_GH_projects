@@ -33,13 +33,15 @@ jobs:
         ISSUE_NODE_ID="${{ inputs.ISSUE_NODE_ID }}"
         PRIORITY="${{ inputs.PRIORITY }}"
         WORKLOAD="${{ inputs.WORKLOAD }}"
+        COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
         echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
         echo "PRIORITY=$PRIORITY"
         echo "WORKLOAD=$WORKLOAD"
+        echo "COLUMN_NAME=$COLUMN_NAME"
         # Get the projects associated with the organization
         projects=$(curl --request POST \
             --url https://api.github.com/graphql \
-            --header "Authorization: Bearer ${{ secrets.pat }}" \
+            --header "Authorization: Bearer ${{ secrets.PAT }}" \
             --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
         echo "projects=$projects"
         # Get the project IDs
@@ -72,10 +74,9 @@ jobs:
               echo "detailed_project=$detailed_project"
               # Extract the status field id
               status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
-              column_name="${{ inputs.COLUMN_NAME }}"
-              Option_id=$(echo $detailed_project | jq -r --arg column_name "$column_name" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $column_name) | .id')
+              Option_id=$(echo $detailed_project | jq -r --arg COLUMN_NAME $COLUMN_NAME '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
               echo "Option_id is $Option_id"
-              echo "change field $status_field_id of issue $issue_id in project $project_id to '${{ inputs.COLUMN_NAME }}'"
+              echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
               # Move the issue to the specified column
               priority_message=""
               workload_message=""

@@ -1,40 +1,36 @@
-name: "Move the Issue Card to the In Review column"
+name: "Move the Issue Card to a different Column triggered by a PR event"
 
 on:
-  pull_request:
-    types: [assigned]
+  workflow_call:
+    inputs:
+      ISSUE_NUMBER:
+        required: true
+        type: string
+        description: 'The number of the issue that triggered the workflow'
+      COLUMN_NAME:
+        type: string
+        default: 'In Progress'
+        description: 'The name of the column to move the issue card to'
+    secrets:
+        PAT:
+          required: true
 
 jobs:
-  evaluate:
+  Move_card:
     runs-on: ubuntu-latest
     steps:
-      - name: "Get link between PR and Issue"
-        id: get_pr_issue_link
+      - name: "Move card in projects"
+        id: move_cards
         run: |
-            # Extract the issue number from the pull request body
-            ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+')
-            echo "ISSUE_NUMBER=$ISSUE_NUMBER"
-            # If no issue number is found, set NUMBER_IS_SET to false
-            if [ -z "$ISSUE_NUMBER" ]; then
-                echo "No issue number found in the pull request body."
-                echo "NUMBER_IS_SET=false" >> $GITHUB_ENV
-            fi
-            # Remove the '#' from the issue number
-            CLEAN_ISSUE_NUMBER=$(echo $ISSUE_NUMBER | tr -d '#')
-            # Set the cleaned issue number and NUMBER_IS_SET to true
-            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
-            echo "NUMBER_IS_SET=true" >> $GITHUB_ENV
-            # Debug output
-            echo "NUMBER_IS_SET=$NUMBER_IS_SET"
-            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
-      - name: "Find associated Projects"
-        id: find_projects
-        if: env.NUMBER_IS_SET == 'true'
-        run: |
+          ISSUE_NUMBER="${{ inputs.ISSUE_NUMBER }}"
+          COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
+          echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+          echo "COLUMN_NAME=$COLUMN_NAME"
+
           # Get the projects associated with the organization
           projects=$(curl --request POST \
                             --url https://api.github.com/graphql \
-                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                            --header "Authorization: Bearer ${{ secrets.PAT }}" \
                             --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
           echo "projects=$projects">> $GITHUB_OUTPUT
           # Get the project IDs
@@ -45,7 +41,7 @@ jobs:
               # Get the issues within the project
               issues=$(curl --request POST \
                             --url https://api.github.com/graphql \
-                            --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                            --header "Authorization: Bearer ${{ secrets.PAT }}" \
                             --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id number } } } } } } } }\"}")
               echo "issues=$issues"
              # Extract the issue ids, PVII ids, and issue numbers. The issue_id is the global_id, the PVII id is the project specific id, and the issue number is the issue number (eg. #123)
@@ -62,11 +58,11 @@ jobs:
                 echo "PVII_id is $PVII_id"
                 echo "issue_number is $issue_number"
                 # Check if the issue number matches the cleaned issue number from the pull request
-                if [ $issue_number == '${{steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER}}' ]; then
+                if [ "$issue_number" = "$ISSUE_NUMBER" ]; then
                   # An Issue number is not unique per project. We need to check if the issue is in the correct project
                   detailed_project=$(curl --request POST \
                         --url https://api.github.com/graphql \
-                        --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                        --header "Authorization: Bearer ${{ secrets.PAT }}" \
                         --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } items(first: 100) { nodes { content { ... on Issue { id number } } } } } } }\"}")
                   # Extract the issue ids from the detailed project
                   compare_issue_id=$(echo $detailed_project | jq -r '.data.node.items.nodes[].content.id')
@@ -84,7 +80,7 @@ jobs:
                     echo "change field $status_field_id of issue $issue_id in project $project_id to 'In Review'"
                     response=$(curl --request POST \
                       --url https://api.github.com/graphql \
-                      --header "Authorization: Bearer ${{ secrets.TEST_SECRET }}" \
+                      --header "Authorization: Bearer ${{ secrets.PAT }}" \
                       --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$In_Review_Option_id'\"}}) {projectV2Item {id}}}"}')
                     echo "response=$response"
                   fi

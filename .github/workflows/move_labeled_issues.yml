@@ -3,9 +3,12 @@ name: "Move the Issue after workload and urgency is evaluated"
 on:
   issues:
     types: [labeled, assigned, unassigned, unlabeled]
+  pull_request:
+    types: [opened, reopened, ready_for_review, assigned, unassigned]
 
 jobs:
-  evaluate:
+  evaluate_issues:
+    if: ${{ github.event_name == 'issues' }}
     runs-on: ubuntu-latest
     outputs:
       WORKLOAD_SET: ${{ steps.check_workload.outputs.WORKLOAD_SET }}
@@ -46,9 +49,36 @@ jobs:
             echo "PRIORITY=$priority" >> $GITHUB_OUTPUT
             echo "PRIORITY_SET=$PRIORITY_SET"
             echo "${{ github.event.action }}"
+  
+  evaluate_pr:
+    runs-on: ubuntu-latest
+    outputs:
+      NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
+      CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: "Get link between PR and Issue"
+        id: get_pr_issue_link
+        run: |
+            # Extract the issue number from the pull request body
+            ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+')
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+            # If no issue number is found, set NUMBER_IS_SET to false
+            if [ -z "$ISSUE_NUMBER" ]; then
+                echo "No issue number found in the pull request body."
+                echo "NUMBER_IS_SET=false" >> $GITHUB_ENV
+            fi
+            # Remove the '#' from the issue number
+            CLEAN_ISSUE_NUMBER=$(echo $ISSUE_NUMBER | tr -d '#')
+            # Set the cleaned issue number and NUMBER_IS_SET to true
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
+            echo "NUMBER_IS_SET=true" >> $GITHUB_ENV
+            # Debug output
+            echo "NUMBER_IS_SET=$NUMBER_IS_SET"
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
 
   move_card_to_ToDo:
-    needs: [evaluate]
+    needs: [evaluate_issues]
     if: ${{ github.event.action == 'labeled' && needs.evaluate.outputs.WORKLOAD_SET == 'true' && needs.evaluate.outputs.PRIORITY_SET == 'true' }}
     uses: ./.github/workflows/move_card.yml
     with:
@@ -60,7 +90,7 @@ jobs:
         PAT: ${{ secrets.TEST_SECRET }}
   
   move_card_to_InProgress:
-    needs: [evaluate]
+    needs: [evaluate_issues]
     if: ${{ needs.evaluate.outputs.WORKLOAD_SET == 'true' && needs.evaluate.outputs.PRIORITY_SET == 'true' && github.event.action == 'assigned' }}
     uses: ./.github/workflows/move_card.yml
     with:
@@ -70,7 +100,7 @@ jobs:
         PAT: ${{ secrets.TEST_SECRET }}
 
   move_card_back_to_ToDo:
-    needs: [evaluate]
+    needs: [evaluate_issues]
     if: ${{ needs.evaluate.outputs.WORKLOAD_SET == 'true' && needs.evaluate.outputs.PRIORITY_SET == 'true' && github.event.action == 'unassigned' }}
     uses: ./.github/workflows/move_card.yml
     with:
@@ -80,12 +110,32 @@ jobs:
         PAT: ${{ secrets.TEST_SECRET }}
   
   move_card_back_to_In-Box:
-    needs: [evaluate]
+    needs: [evaluate_issues]
     if: ${{ needs.evaluate.outputs.WORKLOAD_SET != 'true' || needs.evaluate.outputs.PRIORITY_SET != 'true' && github.event.action == 'unlabeled' }}
     uses: ./.github/workflows/move_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         COLUMN_NAME: 'In-Box'
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+
+  move_card_to_Needs_Review:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && (github.event.action == 'opened' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
+    uses: ./.github/workflows/assigned_pr.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        COLUMN_NAME: 'Needs Review'
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+
+  move_card_to_In_Review:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'assigned' }}
+    uses: ./.github/workflows/assigned_pr.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        COLUMN_NAME: 'In Review'
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
