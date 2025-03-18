@@ -8,21 +8,29 @@ on:
         type: string
         description: 'The node id of the issue that triggered the workflow'
       COLUMN_NAME:
-        required: true
         type: choice
-        options: ['In-Box', 'ToDo', 'In Progress']
+        options:
+            - In-Box
+            - ToDo
+            - InProgress
         default: 'In-Box'
         description: 'The name of the column to move the issue card to'
       PRIORITY:
-        required: true
         type: choice
-        options: ['high', 'medium', 'low', 'NONE']
+        options:
+            - high
+            - medium
+            - low
+            - NONE
         default: 'NONE'
         description: 'The priority of the issue'
       WORKLOAD:
-        required: true
         type: choice
-        options: ['high', 'medium', 'low', 'NONE']
+        options: 
+            - high
+            - medium
+            - low
+            - NONE
         default: 'NONE'
         description: 'The workload of the issue'
     secrets:
