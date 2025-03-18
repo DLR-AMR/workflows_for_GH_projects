@@ -33,7 +33,7 @@ jobs:
         ISSUE_NODE_ID="${{ inputs.ISSUE_NODE_ID }}"
         PRIORITY="${{ inputs.PRIORITY }}"
         WORKLOAD="${{ inputs.WORKLOAD }}"
-        COLUMN_NAME="\"${{ inputs.COLUMN_NAME }}\""
+        COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
         echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
         echo "PRIORITY=$PRIORITY"
         echo "WORKLOAD=$WORKLOAD"
@@ -74,7 +74,7 @@ jobs:
               echo "detailed_project=$detailed_project"
               # Extract the status field id
               status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
-              Option_id=$(echo $detailed_project | jq -r --arg COLUMN_NAME $COLUMN_NAME '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == ($COLUMN_NAME | @sh)) | .id')
+              Option_id=$(echo $detailed_project | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
               echo "Option_id is $Option_id"
               echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
               # Move the issue to the specified column
