@@ -185,7 +185,7 @@ jobs:
   open_issue_for_quick_pr:
     needs: [evaluate_pr]
     outputs:
-      ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
+      ISSUE_NUMBER: ${{ steps.create_issue.outputs.ISSUE_NUMBER }}
     if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
     runs-on: ubuntu-latest
     env:
@@ -235,7 +235,7 @@ jobs:
         gh pr edit "$PR_NUMBER" --body "$new_pr_body"
 
   move_quick_pr_issue_to_Needs_Review:
-    needs: [open_issue_for_quick_pr]
+    needs: [open_issue_for_quick_pr, evaluate_pr]
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.open_issue_for_quick_pr.outputs.ISSUE_NUMBER }}
