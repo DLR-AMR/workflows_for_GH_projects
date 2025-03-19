@@ -84,11 +84,16 @@ jobs:
     outputs:
       NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
       CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
+      REPO_NODE_ID: ${{ steps.get_pr_issue_link.outputs.REPO_NODE_ID }}
     if: ${{ github.event_name == 'pull_request' }}
     steps:
       - name: "Get link between PR and Issue"
         id: get_pr_issue_link
         run: |
+            # Extract the repository node ID from the pull request event
+            REPO_NODE_ID=$(jq -r '.repository.node_id' < $GITHUB_EVENT_PATH)
+            echo "REPO_NODE_ID=$REPO_NODE_ID"
+            echo "REPO_NODE_ID=$REPO_NODE_ID" >> $GITHUB_OUTPUT
             # Extract the issue number from the pull request body
             ISSUE_NUMBER=$(jq -r '.pull_request.body' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+')
             echo "ISSUE_NUMBER=$ISSUE_NUMBER"
