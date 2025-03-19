@@ -164,6 +164,7 @@ jobs:
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
         COLUMN_NAME: 'Needs Review'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
@@ -174,6 +175,7 @@ jobs:
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
         COLUMN_NAME: 'In Review'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
