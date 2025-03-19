@@ -8,7 +8,7 @@ You need to provide a personal access Token for github that has read/write acces
 
 # How to setup a repository.
 The workflows are triggered by a repository. The projects can be on organization level.
-1. Copy the files from ".github/workflows" into the workflow folder of your repository.
+1. Copy the files [move_card.yml, issue_event_moves_card.yml, pr_event_moves_card, quick_pr.yml ]from ".github/workflows" into the workflow folder of your repository.
 2. Replace the secret variables with a secret containing a PAT with write-rights to your projects.
 
 # How to setup a project. 
