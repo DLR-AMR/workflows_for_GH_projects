@@ -22,6 +22,10 @@ jobs:
             echo "TITLE=$TITLE"
             echo "AUTHOR=$AUTHOR"
 
+            # Ensure the repository context is set
+            gh repo set-default "${{ github.repository }}"
+
+            # Create the new issue
             new_issue_url=$(gh issue create \
                 --title "$TITLE" \
                 --assignee "$AUTHOR" \
