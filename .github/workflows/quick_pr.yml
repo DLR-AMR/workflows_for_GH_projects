@@ -5,14 +5,19 @@ on:
     secrets:
         PAT:
           required: true
+    outputs:
+        ISSUE_NUMBER:
+            description: 'The number of the issue that was created'
+            value: ${{ jobs.create_issue.outputs.ISSUE_NUMBER }}
+        
     env:
         GITHUB_TOKEN: ${{ secrets.PAT }}
 
 jobs:
     create_issue:
+        runs-on: ubuntu-latest
         outputs:
             ISSUE_NUMBER: ${{ steps.create_issue.outputs.ISSUE_NUMBER }}
-        runs-on: ubuntu-latest
         steps:
           - name: "checkout repo"
             uses: actions/checkout@v4
