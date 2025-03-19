@@ -19,35 +19,34 @@ jobs:
         outputs:
             ISSUE_NUMBER: ${{ steps.create_issue.outputs.ISSUE_NUMBER }}
         steps:
-          - name: "checkout repo"
-            uses: actions/checkout@v4
-            with:
-              repository: ${{ github.event.repository.full_name }}
-              ref: ${{ github.event.pull_request.head.ref }}
-              fetch-depth: 0
-          - name: "Create issue"
-              id: create_issue
-              run: |
-                    # Get the title of the triggering PR
-                    TITLE="${{ github.event.pull_request.title }}"
-                    AUTHOR="${{ github.event.pull_request.user.login }}"
-                    echo "TITLE=$TITLE"
-                    echo "AUTHOR=$AUTHOR"
-                    new_issue_url=$(gh issue create \
-                        --title "$TITLE" \
-                        --assignee "$AUTHOR" \
-                        --body "This Issue was created because the PR did not reference an Issue."
-                    )
-                    echo "new_issue_url=$new_issue_url"
-                    # Extract the issue number from the URL. 
-                    # The URL is in the format https://github.com/orga-name/repo-name/issues/issues_number
-                    ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
-                    echo "ISSUE_NUMBER=$ISSUE_NUMBER"
-                    echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+        - uses: actions/checkout@v4
+          with:
+            repository: ${{ github.event.repository.full_name }}
+            ref: ${{ github.event.pull_request.head.ref }}
+            fetch-depth: 0
+        - name: "Create issue"
+          id: create_issue
+          run: |
+                # Get the title of the triggering PR
+                TITLE="${{ github.event.pull_request.title }}"
+                AUTHOR="${{ github.event.pull_request.user.login }}"
+                echo "TITLE=$TITLE"
+                echo "AUTHOR=$AUTHOR"
+                new_issue_url=$(gh issue create \
+                    --title "$TITLE" \
+                    --assignee "$AUTHOR" \
+                    --body "This Issue was created because the PR did not reference an Issue."
+                )
+                echo "new_issue_url=$new_issue_url"
+                # Extract the issue number from the URL. 
+                # The URL is in the format https://github.com/orga-name/repo-name/issues/issues_number
+                ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
+                echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+                echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
 
-          - name: "Link Issue to PR"
-              id: link_issue
-              run: |
+        - name: "Link Issue to PR"
+          id: link_issue
+          run: |
                 # Add "Closes #ISSUE_NUMBER" to the PR body
                 ISSUE_NUMBER="${{ steps.create_issue.outputs.ISSUE_NUMBER }}"
                 PR_NUMBER="${{ github.event.pull_request.number }}"
