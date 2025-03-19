@@ -48,4 +48,4 @@ jobs:
             # Add the issue number to the PR body
             new_pr_body=$(echo "$pr_body" | sed "s|<!-- ISSUE_NUMBER -->|Closes #$ISSUE_NUMBER\n<!-- ISSUE_NUMBER -->|")
             # Update the PR body
-            gh pr edit "$PR_NUMBER" --body "$new_pr_body"
+            gh pr edit $PR_NUMBER --body $new_pr_body
