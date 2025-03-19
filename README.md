@@ -3,6 +3,9 @@ This Repository provides and maintains a couple of workflow files to support our
 
 Using the provided files together with an instance of the template project [Issue Lifecycle](https://github.com/orgs/DLR-AMR/projects/7) the managing of your issues is nearly fully automated.
 
+# Requirements
+You need to provide a personal access Token for github that has read/write access for projects and issues on organizaton level.
+
 # How to setup a repository.
 The workflows are triggered by a repository. The projects can be on organization level.
 1. Copy the files from ".github/workflows" into the workflow folder of your repository.
