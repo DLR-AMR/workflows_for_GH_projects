@@ -2,6 +2,12 @@ name: "Create an Issue for a PR that does not reference an Issue"
 
 on:
     workflow_call:
+        secrets:
+            PAT:
+                required: true
+
+env:
+    GH_TOKEN: ${{ secrets.PAT }}
 
 jobs:
     Create_Issue:
@@ -13,6 +19,8 @@ jobs:
             # Get the title of the triggering PR
             TITLE="${{ github.event.pull_request.title }}"
             AUTHOR="${{ github.event.pull_request.user.login }}"
+            echo "TITLE=$TITLE"
+            echo "AUTHOR=$AUTHOR"
 
             new_issue_url=$(gh issue create \
                 --title "$TITLE" \
@@ -35,7 +43,7 @@ jobs:
             ISSUE_NUMBER="${{ steps.create_issue.outputs.ISSUE_NUMBER }}"
             PR_NODE_ID="${{ github.event.pull_request.node_id }}"
             # Get the PR body
-            pr_body="${{ github.event.pull_request.body }}"
+            pr_body=${{ github.event.pull_request.body }}
             # Add the issue number to the PR body
             new_pr_body=$(echo "$pr_body" | sed "s|<!-- ISSUE_NUMBER -->|Closes #$ISSUE_NUMBER\n<!-- ISSUE_NUMBER -->|")
             # Update the PR body
