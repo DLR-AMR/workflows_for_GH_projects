@@ -225,10 +225,11 @@ jobs:
         echo "ISSUE_NUMBER=$ISSUE_NUMBER"
         echo "PR_NUMBER=$PR_NUMBER"
         # Get the PR body
-        pr_body=${{ github.event.pull_request.body }}
+        pr_body=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH)
         echo "pr_body=$pr_body"
         # Add the issue number to the PR body
-        new_pr_body=$(echo "$pr_body" | sed "s|<!-- ISSUE_NUMBER -->|Closes #$ISSUE_NUMBER\n<!-- ISSUE_NUMBER -->|")
+        # Add "Closes #ISSUE_NUMBER" to the top of the PR body
+        new_pr_body="Closes #$ISSUE_NUMBER\n$pr_body"
         echo "new_pr_body=$new_pr_body"
         # Update the PR body
         gh pr edit $PR_NUMBER --body $new_pr_body
