@@ -232,6 +232,6 @@ jobs:
         new_pr_body="Closes #$ISSUE_NUMBER\n$pr_body"
         echo "new_pr_body=$new_pr_body"
         # Update the PR body
-        gh pr edit $PR_NUMBER --body $new_pr_body
+        gh pr edit "$PR_NUMBER" --body "$new_pr_body"
 
 
