@@ -205,8 +205,6 @@ jobs:
         new_issue_url=$(gh issue create \
             --title "$TITLE" \
             --assignee "$AUTHOR" \
-            --label "workload:low" \
-            --label "priority:low" \
             --body "This Issue was created because the PR did not reference an Issue."
         )
         echo "new_issue_url=$new_issue_url"
