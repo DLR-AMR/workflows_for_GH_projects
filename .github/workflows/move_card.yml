@@ -229,7 +229,7 @@ jobs:
         echo "pr_body=$pr_body"
         # Add the issue number to the PR body
         # Add "Closes #ISSUE_NUMBER" to the top of the PR body
-        new_pr_body="Closes #$ISSUE_NUMBER\n$pr_body"
+        new_pr_body=$(printf "Closes #%s\n\n%s" "$ISSUE_NUMBER" "$pr_body")
         echo "new_pr_body=$new_pr_body"
         # Update the PR body
         gh pr edit "$PR_NUMBER" --body "$new_pr_body"
