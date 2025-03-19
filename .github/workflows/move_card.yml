@@ -4,7 +4,7 @@ on:
   issues:
     types: [labeled, assigned, unassigned, unlabeled]
   pull_request:
-    types: [opened, reopened, ready_for_review, assigned, unassigned]
+    types: [opened, reopened, ready_for_review, review_requested, review_request_removed, closed]
 
 jobs:
   evaluate_issues:
@@ -173,11 +173,33 @@ jobs:
 
   move_card_to_In_Review:
     needs: [evaluate_pr]
-    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'assigned' }}
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'review_requested' }}
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
         COLUMN_NAME: 'In Review'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+
+  move_card_back_to_Needs_Review:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'review_request_removed' }}
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        COLUMN_NAME: 'Needs Review'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
+    secrets:
+        PAT: ${{ secrets.TEST_SECRET }}
+
+  move_card_back_to_In_Progress:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'closed' }}
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        COLUMN_NAME: 'In Progress'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
