@@ -244,5 +244,3 @@ jobs:
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
-
-
