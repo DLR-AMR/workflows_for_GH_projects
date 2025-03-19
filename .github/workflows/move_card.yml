@@ -189,6 +189,11 @@ jobs:
     env:
         GH_TOKEN: ${{ secrets.TEST_SECRET }}
     steps:
+    - uses: actions/checkout@v4
+      with: 
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
+        fetch-depth: 0
     - name: "Create Issue"
       id: create_issue
       run: |
@@ -197,14 +202,13 @@ jobs:
         AUTHOR="${{ github.event.pull_request.user.login }}"
         echo "TITLE=$TITLE"
         echo "AUTHOR=$AUTHOR"
-        # Create the new issue
-            new_issue_url=$(gh issue create \
-                --title "$TITLE" \
-                --assignee "$AUTHOR" \
-                --label "workload:low" \
-                --label "priority:low" \
-                --body "This Issue was created because the PR did not reference an Issue."
-            )
+        new_issue_url=$(gh issue create \
+            --title "$TITLE" \
+            --assignee "$AUTHOR" \
+            --label "workload:low" \
+            --label "priority:low" \
+            --body "This Issue was created because the PR did not reference an Issue."
+        )
         echo "new_issue_url=$new_issue_url"
         # Extract the issue number from the URL. 
         # The URL is in the format https://github.com/orga-name/repo-name/issues/issues_number
