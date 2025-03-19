@@ -184,6 +184,8 @@ jobs:
 
   open_issue_for_quick_pr:
     needs: [evaluate_pr]
+    outputs:
+      ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
     if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
     runs-on: ubuntu-latest
     env:
