@@ -182,6 +182,7 @@ jobs:
         PAT: ${{ secrets.TEST_SECRET }}
 
   open_issue_for_quick_pr:
+    needs: [evaluate_pr]
     if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
     uses: ./.github/workflows/quick_pr.yml
 
