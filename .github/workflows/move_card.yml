@@ -186,6 +186,8 @@ jobs:
     needs: [evaluate_pr]
     if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
     runs-on: ubuntu-latest
+    env:
+        GH_TOKEN: ${{ secrets.TEST_SECRET }}
     steps:
     - name: "Create Issue"
       id: create_issue
