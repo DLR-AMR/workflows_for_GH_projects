@@ -49,7 +49,7 @@ jobs:
           id: link_issue
           run: |
                 # Add "Closes #ISSUE_NUMBER" to the PR body
-                ISSUE_NUMBER="${{ steps.create_issue.outputs.ISSUE_NUMBER }}"
+                ISSUE_NUMBER="${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}"
                 PR_NUMBER="${{ github.event.pull_request.number }}"
                 echo "ISSUE_NUMBER=$ISSUE_NUMBER"
                 echo "PR_NUMBER=$PR_NUMBER"
