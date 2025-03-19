@@ -221,12 +221,12 @@ jobs:
       run: |
         # Add "Closes #ISSUE_NUMBER" to the PR body
         ISSUE_NUMBER="${{ steps.create_issue.outputs.ISSUE_NUMBER }}"
-        PR_NODE_ID="${{ github.event.pull_request.node_id }}"
+        PR_NUMBER="${{ github.event.pull_request.number }}"
         # Get the PR body
-        pr_body="${{ github.event.pull_request.body }}"
+        pr_body=${{ github.event.pull_request.body }}
         # Add the issue number to the PR body
         new_pr_body=$(echo "$pr_body" | sed "s|<!-- ISSUE_NUMBER -->|Closes #$ISSUE_NUMBER\n<!-- ISSUE_NUMBER -->|")
         # Update the PR body
-        gh pr edit "$PR_NODE_ID" --body "$new_pr_body"
+        gh pr edit "$PR_NUMBER" --body "$new_pr_body"
 
 
