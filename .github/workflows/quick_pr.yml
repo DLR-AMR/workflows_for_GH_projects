@@ -14,7 +14,7 @@ jobs:
     create_issue:
         runs-on: ubuntu-latest
         outputs:
-            ISSUE_NUMBER: ${{ steps.create_issue.outputs.ISSUE_NUMBER }}
+            ISSUE_NUMBER: ${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}
         steps:
         - uses: actions/checkout@v4
           with:
@@ -26,7 +26,7 @@ jobs:
           run: echo "GITHUB_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
 
         - name: "Create Issue"
-          id: create_issue
+          id: create_issue_and_output_number
           run: |
                 # Get the title of the triggering PR
                 TITLE="${{ github.event.pull_request.title }}"
