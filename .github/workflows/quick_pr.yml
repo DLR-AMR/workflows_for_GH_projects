@@ -3,41 +3,47 @@ name: "Create an Issue for a PR that does not reference an Issue"
 on:
     workflow_call:
 
-
 jobs:
     Create_Issue:
         runs-on: ubuntu-latest
         steps:
+        - name: "Install GitHub CLI"
+          run: |
+            sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+            sudo apt-add-repository https://cli.github.com/packages
+            sudo apt update
+            sudo apt install gh -y
+
         - name: "Create Issue"
           id: create_issue
           run: |
-                # Get the title of the triggering PR
-                TITLE=$ {{ github.event.pull_request.title }}
-                AUTHOR=$ {{ github.event.pull_request.user.login }}
+            # Get the title of the triggering PR
+            TITLE="${{ github.event.pull_request.title }}"
+            AUTHOR="${{ github.event.pull_request.user.login }}"
 
-                new_issue_url=$(gh issue create \
-                    --title "$TITLE" \
-                    --assignee "$AUTHOR" \
-                    --label "workload:low" \
-                    --label "priority:low" \
-                    --body "This Issue was created because the PR did not reference an Issue." \
-                )
-                echo "new_issue_url=$new_issue_url"
-                # Extract the issue number from the URL. 
-                # The URL is in the format https://github.com/orga-name/repo-name/issues/issues_number
-                # Extract the issue number from the URL
-                ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
-                echo "ISSUE_NUMBER=$ISSUE_NUMBER"
-                echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+            new_issue_url=$(gh issue create \
+                --title "$TITLE" \
+                --assignee "$AUTHOR" \
+                --label "workload:low" \
+                --label "priority:low" \
+                --body "This Issue was created because the PR did not reference an Issue."
+            )
+            echo "new_issue_url=$new_issue_url"
+            # Extract the issue number from the URL. 
+            # The URL is in the format https://github.com/orga-name/repo-name/issues/issues_number
+            ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+
         - name: "Link Issue to PR"
-            id: link_issue
-            run: |
-                # Add "Closes #ISSUE_NUMBER" to the PR body.
-                ISSUE_NUMBER=$ {{ steps.create_issue.outputs.ISSUE_NUMBER }}
-                PR_NODE_ID= ${{ github.event.pull_request.node_id }}
-                # Get the PR body
-                pr_body=${{ github.event.pull_request.body }}
-                # Add the issue number to the PR body
-                new_pr_body=$(echo "$pr_body" | sed "s|<!-- ISSUE_NUMBER -->|Closes #$ISSUE_NUMBER\n<!-- ISSUE_NUMBER -->|")
-                # Update the PR body
-                gh pr edit $PR_NODE_ID --body "$new_pr_body"
+          id: link_issue
+          run: |
+            # Add "Closes #ISSUE_NUMBER" to the PR body
+            ISSUE_NUMBER="${{ steps.create_issue.outputs.ISSUE_NUMBER }}"
+            PR_NODE_ID="${{ github.event.pull_request.node_id }}"
+            # Get the PR body
+            pr_body="${{ github.event.pull_request.body }}"
+            # Add the issue number to the PR body
+            new_pr_body=$(echo "$pr_body" | sed "s|<!-- ISSUE_NUMBER -->|Closes #$ISSUE_NUMBER\n<!-- ISSUE_NUMBER -->|")
+            # Update the PR body
+            gh pr edit "$PR_NODE_ID" --body "$new_pr_body"
