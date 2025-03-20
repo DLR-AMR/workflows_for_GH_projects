@@ -9,7 +9,7 @@ You need to provide a personal access Token for github that has read/write acces
 # How to setup a repository.
 The workflows are triggered by a repository. The projects can be on organization level.
 1. Copy the files [move_card.yml, issue_event_moves_card.yml, pr_event_moves_card, quick_pr.yml ]from ".github/workflows" into the workflow folder of your repository.
-2. Replace the secret variables with a secret containing a PAT with write-rights to your projects.
+2. Replace the secret variables with a secret containing a PAT with write-rights to your projects and issues.
 
 # How to setup a project. 
 1. Use the template [Issue Lifecycle](https://github.com/orgs/DLR-AMR/projects/7)
@@ -33,3 +33,5 @@ Merging the PR will close the Issue and it will be moved to "Done"
 
 Once it has been communicated to other developers what has been done the card can manually be moved to "Can be archived".
 All closed issues will automatically be archived after 2 weeks. 
+
+For quick-fixes you can also open up a "quick Pull request". It can be annoying for a developer to open up an Issue for every small typo / bug-fix / one-line-change in a repository. To make this a more comfortable process we allow developers to open a quick-PR, which is a PR that does not reference an Issue. In that case an Issue is created and linked to the PR by adding "Closes #ISSUE_NUMBER" to the top of the body of the PR. 
