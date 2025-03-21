@@ -195,7 +195,7 @@ jobs:
 
   move_card_back_to_In_Progress:
     needs: [evaluate_pr]
-    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'closed' }}
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'closed' && github.event.pull_request.merged == false }}
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
