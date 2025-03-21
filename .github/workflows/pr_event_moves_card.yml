@@ -63,7 +63,6 @@ jobs:
                 issue_number=$(echo $combined_id | cut -d, -f3)
                 repository_id=$(echo $combined_id | cut -d, -f4)
                 echo "issue_id is $issue_id"
-                echo "PVII_id is $PVII_id"
                 echo "issue_number is $issue_number"
                 echo "repository_id is $repository_id"
                 # Check if the issue number matches the cleaned issue number from the pull request
