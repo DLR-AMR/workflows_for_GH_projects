@@ -118,6 +118,7 @@ jobs:
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
             echo "${{ github.event.action }}"
 
+  # Move the issue card to ToDO if the workload and priority are set
   move_card_to_ToDo:
     needs: [evaluate_issues]
     if: ${{ github.event.action == 'labeled' && needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' }}
@@ -130,6 +131,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
   
+  # Move the Issue card to In Progress if the workload and priority are set and the issue is assigned
   move_card_to_InProgress:
     needs: [evaluate_issues]
     if: ${{ needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' && github.event.action == 'assigned' }}
@@ -140,6 +142,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
+  # Move the Issue card back to ToDo if the workload and priority are set and the issue is unassigned
   move_card_back_to_ToDo:
     needs: [evaluate_issues]
     if: ${{ needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' && github.event.action == 'unassigned' }}
@@ -150,6 +153,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
   
+  # Move the Issue card back to In-Box if the workload and priority are unset
   move_card_back_to_In-Box:
     needs: [evaluate_issues]
     if: ${{ github.event.action == 'unlabeled' && (needs.evaluate_issues.outputs.WORKLOAD_SET == 'false' || needs.evaluate_issues.outputs.PRIORITY_SET == 'false') }}
@@ -160,6 +164,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
+  # For a PR event, move the card to Needs Review if the PR is opened, ready for review, or reopened
   move_card_to_Needs_Review:
     needs: [evaluate_pr]
     if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && (github.event.action == 'opened' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
@@ -171,6 +176,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
+  # For a PR event move the card to In Review if a review is requested
   move_card_to_In_Review:
     needs: [evaluate_pr]
     if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'review_requested' }}
@@ -182,6 +188,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
+  # For a PR event move the card back to Needs Review if a review is removed
   move_card_back_to_Needs_Review:
     needs: [evaluate_pr]
     if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'review_request_removed' }}
@@ -193,6 +200,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
+  # For a PR event move the card back to In Progress if the PR is closed and not merged
   move_card_back_to_In_Progress:
     needs: [evaluate_pr]
     if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'closed' && github.event.pull_request.merged == false }}
@@ -204,6 +212,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
+  # For a PR event where no issue is linked, open a new issue and add "Closes #ISSUE_NUMBER" to the PR body
   open_issue_for_quick_pr:
     needs: [evaluate_pr]
     if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
@@ -211,6 +220,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
+  # After the issue has been created by open_issue_for_quick_pr, move the card to Needs Review
   move_quick_pr_issue_to_Needs_Review:
     needs: [open_issue_for_quick_pr, evaluate_pr]
     uses: ./.github/workflows/pr_event_moves_card.yml
