@@ -118,7 +118,7 @@ jobs:
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
             echo "${{ github.event.action }}"
 
-  # Move the issue card to ToDO if the workload and priority are set
+  # Move the issue card to ToDo if the workload and priority are set
   move_card_to_ToDo:
     needs: [evaluate_issues]
     if: ${{ github.event.action == 'labeled' && needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' }}
