@@ -87,6 +87,7 @@ jobs:
                 if [[ " ${issue_numbers_array[@]} " =~ " $issue_number " ]] && [ "$repository_id" = "${{ inputs.REPO_NODE_ID }}" ]; then
                   # Remove the issue_number from issue_numbers_array
                   issue_numbers_array=("${issue_numbers_array[@]/$issue_number}")
+                  
                   #detailed_project=$(curl --request POST \
                   #      --url https://api.github.com/graphql \
                   #      --header "Authorization: Bearer ${{ secrets.PAT }}" \
