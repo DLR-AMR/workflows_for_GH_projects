@@ -37,7 +37,7 @@ jobs:
           echo "COLUMN_NAME=$COLUMN_NAME"
           echo "CURRENT_COLUMN_NAME=$CURRENT_COLUMN_NAME"
 
-          #ISSUE_NUMBER can be a list of referenced issue numbers seperated by ","
+          #ISSUE_NUMBER can be a list of referenced issue numbers separated by ","
           # Split ISSUE_NUMBER into an array
             IFS=',' read -r -a issue_numbers_array <<< "$ISSUE_NUMBER"
 
