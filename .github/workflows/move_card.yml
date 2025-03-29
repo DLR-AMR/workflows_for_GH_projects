@@ -108,7 +108,7 @@ jobs:
                 exit 0
             fi
             # Remove the '#' from the issue number
-            CLEAN_ISSUE_NUMBERS=$(echo $ISSUE_NUMBER | grep -oE '[0-9]+' | tr '\n' ',' | sed 's/,$//')
+            CLEAN_ISSUE_NUMBERS=$(echo "$ISSUE_NUMBER" | grep -oE '[0-9]+' | paste -sd ',' -)
             # Set the cleaned issue number and NUMBER_IS_SET to true
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
             NUMBER_IS_SET=true
