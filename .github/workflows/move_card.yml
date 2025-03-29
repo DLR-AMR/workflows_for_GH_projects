@@ -121,6 +121,7 @@ jobs:
     uses: ./.github/workflows/issue_event_moves_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'In-Box'
         COLUMN_NAME: 'ToDo'
         PRIORITY: ${{ needs.evaluate_issues.outputs.PRIORITY }}
         WORKLOAD: ${{ needs.evaluate_issues.outputs.WORKLOAD }}
@@ -134,6 +135,7 @@ jobs:
     uses: ./.github/workflows/issue_event_moves_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'ToDo'
         COLUMN_NAME: 'In Progress'
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
@@ -145,6 +147,7 @@ jobs:
     uses: ./.github/workflows/issue_event_moves_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'In Progress'
         COLUMN_NAME: 'ToDo'
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
@@ -156,6 +159,7 @@ jobs:
     uses: ./.github/workflows/issue_event_moves_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'ToDo'
         COLUMN_NAME: 'In-Box'
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}

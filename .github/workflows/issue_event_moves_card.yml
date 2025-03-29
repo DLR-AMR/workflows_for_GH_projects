@@ -11,6 +11,10 @@ on:
         type: string
         default: 'In-Box'
         description: 'The name of the column to move the issue card to'
+      CURRENT_COLUMN_NAME:
+        type: string
+        default: 'In-Box'
+        description: 'The name of the column the issue card was in before'
       PRIORITY:
         type: string
         default: 'NONE'
@@ -34,6 +38,7 @@ jobs:
         PRIORITY="${{ inputs.PRIORITY }}"
         WORKLOAD="${{ inputs.WORKLOAD }}"
         COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
+        CURRENT_COLUMN_NAME="${{ inputs.CURRENT_COLUMN_NAME }}"
         echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
         echo "PRIORITY=$PRIORITY"
         echo "WORKLOAD=$WORKLOAD"
@@ -67,12 +72,20 @@ jobs:
             if [ "$issue_id" == "$ISSUE_NODE_ID" ]; then
               # Extract the status field id
               status_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
-              Option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
-              echo "Option_id is $Option_id"
-              echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
-              # Move the issue to the specified column
+              # Get the current status of the issue
+              current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .text')
+              echo "current_status is $current_status"
               priority_message=""
               workload_message=""
+              status_message=""
+              if [ "$current_status" != "$COLUMN_NAME" ]; then
+                # Move the issue to the specified column
+                Option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
+                echo "Option_id is $Option_id"
+                echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
+                status_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}"
+                echo "status_message is $status_message"
+              fi
               if [ "$PRIORITY" != 'NONE' ]; then
                 priority_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .id')
                 priority_option_id=$(echo $project_fields_and_issues | jq -r --arg PRIORITY "$PRIORITY" '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == $PRIORITY) | .id')
@@ -83,10 +96,9 @@ jobs:
                 workload_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .id')
                 workload_option_id=$(echo $project_fields_and_issues | jq -r --arg WORKLOAD "$WORKLOAD" '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == $WORKLOAD) | .id')
                 workload_message="updateProjectV2ItemFieldValue2: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$workload_field_id'\", value: { singleSelectOptionId: \"'$workload_option_id'\"}}) {projectV2Item {id}}"
-                
                 echo "workload_message is $workload_message"
               fi
-              status_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}"
+
               # Construct the query to move the issue to the specified column.
               # The query is a mutation that updates the status, priority, and workload fields of the issue.
               # If priority or workload are not set, the corresponding message is empty.
