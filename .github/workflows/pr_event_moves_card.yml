@@ -11,6 +11,10 @@ on:
         type: string
         default: 'In Progress'
         description: 'The name of the column to move the issue card to'
+      CURRENT_COLUMN_NAME:
+        type: string
+        default: 'In-Box'
+        description: 'The name of the column the issue card was in before'
       REPO_NODE_ID:
         type: string
         required: true
@@ -28,8 +32,10 @@ jobs:
         run: |
           ISSUE_NUMBER="${{ inputs.ISSUE_NUMBER }}"
           COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
+          CURRENT_COLUMN_NAME="${{ inputs.CURRENT_COLUMN_NAME }}"
           echo "ISSUE_NUMBER=$ISSUE_NUMBER"
           echo "COLUMN_NAME=$COLUMN_NAME"
+          echo "CURRENT_COLUMN_NAME=$CURRENT_COLUMN_NAME"
 
           #ISSUE_NUMBER can be a list of referenced issue numbers seperated by ","
           # Split ISSUE_NUMBER into an array
@@ -83,16 +89,23 @@ jobs:
                   # Extract the status field id
                   status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
                   echo "status_field_id is $status_field_id"
-                  # Extract the option id for the new status
-                  Option_id=$(echo $detailed_project | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
-                  echo "Option_id is $Option_id"
-                  # Change the status of the issue to the new status
-                  echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
-                  response=$(curl --request POST \
-                    --url https://api.github.com/graphql \
-                    --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                    --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}}"}')
-                  echo "response=$response"
+                  #Extract the current status of the issue
+                  current_status=$(echo $detailed_project | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .text')
+                  echo "current_status is $current_status"
+                  if [ "$current_status" == "$CURRENT_COLUMN_NAME" || $CURRENT_COLUMN_NAME == "IGNORE"]; then
+                    # Extract the option id for the new status
+                    Option_id=$(echo $detailed_project | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
+                    echo "Option_id is $Option_id"
+                    # Change the status of the issue to the new status
+                    echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
+                    response=$(curl --request POST \
+                      --url https://api.github.com/graphql \
+                      --header "Authorization: Bearer ${{ secrets.PAT }}" \
+                      --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}}"}')
+                    echo "response=$response"
+                  else
+                    echo "The issue is not in the correct column"
+                  fi
                 fi
               done
             done

@@ -171,6 +171,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'In Progress'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
@@ -183,6 +184,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'Needs Review'
         COLUMN_NAME: 'In Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
@@ -195,6 +197,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'In Review'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
@@ -207,6 +210,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'Needs Review'
         COLUMN_NAME: 'In Progress'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
@@ -226,6 +230,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.open_issue_for_quick_pr.outputs.ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'IGNORE'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
