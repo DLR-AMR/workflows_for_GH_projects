@@ -31,6 +31,10 @@ jobs:
           echo "ISSUE_NUMBER=$ISSUE_NUMBER"
           echo "COLUMN_NAME=$COLUMN_NAME"
 
+          #ISSUE_NUMBER can be a list of referenced issue numbers seperated by " "
+          # Split ISSUE_NUMBER into an array
+          IFS=' ' read -r -a issue_numbers_array <<< "$ISSUE_NUMBER"
+
           # Get the projects associated with the organization
           projects=$(curl --request POST \
                             --url https://api.github.com/graphql \
@@ -67,8 +71,10 @@ jobs:
                 echo "issue_number is $issue_number"
                 echo "repository_id is $repository_id"
                 # Check if the issue number matches the cleaned issue number from the pull request
-                if [ "$issue_number" = "$ISSUE_NUMBER" ] && [ "$repository_id" = "${{ inputs.REPO_NODE_ID }}" ]; then
-                  # An Issue number is not unique per project. We need to check if the issue is in the correct project
+                # An Issue number is not unique per project. We need to check if the issue is in the correct project
+                if [[ " ${issue_numbers_array[@]} " =~ " $issue_number " ]] && [ "$repository_id" = "${{ inputs.REPO_NODE_ID }}" ]; then
+                  # Remove the issue_number from issue_numbers_array
+                  issue_numbers_array=("${issue_numbers_array[@]/$issue_number}")
                   detailed_project=$(curl --request POST \
                         --url https://api.github.com/graphql \
                         --header "Authorization: Bearer ${{ secrets.PAT }}" \
