@@ -86,7 +86,7 @@ jobs:
                         --header "Authorization: Bearer ${{ secrets.PAT }}" \
                         --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } items(first: 100) { nodes { content { ... on Issue { id number } } } } } } }\"}")
                   echo "detailed_project=$detailed_project"
-                  # Extract the status field id
+                  #Extract the status field id
                   status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
                   echo "status_field_id is $status_field_id"
                   #Extract the current status of the issue
