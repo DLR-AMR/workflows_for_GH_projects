@@ -95,27 +95,23 @@ jobs:
             echo "REPO_NODE_ID=$REPO_NODE_ID"
             echo "REPO_NODE_ID=$REPO_NODE_ID" >> $GITHUB_OUTPUT
             # Extract the issue number from the pull request body
-            ISSUE_NUMBER=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH | grep -oE 'Closes #[0-9]+' | grep -oE '[0-9]+' | paste -sd ',' -)
+            CLEAN_ISSUE_NUMBER=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH | grep -oE 'Closes #[0-9]+' | grep -oE '[0-9]+' | paste -sd ',' -)
             # Set the issue number to an empty string if no issue number is found
-            ISSUE_NUMBER=${ISSUE_NUMBER:-""}
-            echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+            CLEAN_ISSUE_NUMBER=${CLEAN_ISSUE_NUMBER:-""}
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
             # If no issue number is found, set NUMBER_IS_SET to false
-            if [ -z "$ISSUE_NUMBER" ]; then
+            if [ -z "$CLEAN_ISSUE_NUMBER" ]; then
                 echo "No issue number found in the pull request body."
                 NUMBER_IS_SET=false
                 echo "NUMBER_IS_SET=$NUMBER_IS_SET" >> $GITHUB_OUTPUT
                 echo "NUMBER_IS_SET=$NUMBER_IS_SET"
                 exit 0
             fi
-            # Remove the '#' from the issue number
-            CLEAN_ISSUE_NUMBERS=$(echo "$ISSUE_NUMBER" | grep -oE '[0-9]+' | paste -sd ',' -)
-            # Set the cleaned issue number and NUMBER_IS_SET to true
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
             NUMBER_IS_SET=true
             echo "NUMBER_IS_SET=true" >> $GITHUB_OUTPUT
             # Debug output!
             echo "NUMBER_IS_SET=$NUMBER_IS_SET"
-            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
             echo "${{ github.event.action }}"
 
   # Move the issue card to ToDo if the workload and priority are set
