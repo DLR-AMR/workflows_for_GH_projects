@@ -32,7 +32,7 @@ jobs:
           echo "COLUMN_NAME=$COLUMN_NAME"
 
           #ISSUE_NUMBER can be a list of referenced issue numbers seperated by " "
-          # Split ISSUE_NUMBER into an array
+          #Split ISSUE_NUMBER into an array
           IFS=' ' read -r -a issue_numbers_array <<< "$ISSUE_NUMBER"
 
           # Get the projects associated with the organization
