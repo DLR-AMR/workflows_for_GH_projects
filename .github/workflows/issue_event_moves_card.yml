@@ -78,7 +78,7 @@ jobs:
               priority_message=""
               workload_message=""
               status_message=""
-              if [ "$current_status" != "$COLUMN_NAME" ]; then
+              if [ "$current_status" == "$CURRENT_COLUMN_NAME" ]; then
                 # Move the issue to the specified column
                 Option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
                 echo "Option_id is $Option_id"
