@@ -228,7 +228,7 @@ jobs:
   move_quick_pr_issue_to_Needs_Review:
     needs: [open_issue_for_quick_pr, evaluate_pr]
     uses: ./.github/workflows/pr_event_moves_card.yml
-    if: ${{ github.event.pull_request.draft == false }}
+    if: ${{ !github.event.pull_request.draft }}
     with:
         ISSUE_NUMBER: ${{ needs.open_issue_for_quick_pr.outputs.ISSUE_NUMBER }}
         CURRENT_COLUMN_NAME: 'IGNORE'
@@ -241,7 +241,7 @@ jobs:
    move_quick_draft_pr_issue_to_In_Progress:
     needs: [open_issue_for_quick_pr, evaluate_pr]
     uses: ./.github/workflows/pr_event_moves_card.yml
-    if: ${{ github.event.pull_request.draft == true }}
+    if: ${{ github.event.pull_request.draft }}
     with:
         ISSUE_NUMBER: ${{ needs.open_issue_for_quick_pr.outputs.ISSUE_NUMBER }}
         CURRENT_COLUMN_NAME: 'IGNORE'
