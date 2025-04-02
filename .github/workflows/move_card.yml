@@ -27,7 +27,6 @@ jobs:
             # Set WORKLOAD_SET to true
             WORKLOAD_SET=true
             echo "WORKLOAD_SET=$WORKLOAD_SET" >> $GITHUB_OUTPUT
-            # extract the workload value. Suppresses error messages from jq. If an error occurs an empty string is added.
             labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[]?.name' 2>/dev/null || echo "")
             workload=$(echo "$labels" | grep -oE 'workload:(high|medium|low)' | cut -d: -f2)
             echo "WORKLOAD=$workload"
@@ -237,7 +236,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
-   # After the issue has been created by open_issue_for_quick_pr, move the card to In Progress
+   # After the issue has been created by open_issue_for_quick_pr, move the card to Needs Review
    move_quick_draft_pr_issue_to_In_Progress:
     needs: [open_issue_for_quick_pr, evaluate_pr]
     uses: ./.github/workflows/pr_event_moves_card.yml
