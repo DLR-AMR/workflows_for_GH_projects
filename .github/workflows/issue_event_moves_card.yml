@@ -66,7 +66,7 @@ jobs:
             --url https://api.github.com/graphql \
             --header "Authorization: Bearer ${{ secrets.PAT }}" \
             --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id title } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options } } } } } }\"}")
-          echo "issues=$project_fields_and_issues"
+          echo "issues=$project_issues"
           # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
           issue_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.id')
           PVII_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].id')
