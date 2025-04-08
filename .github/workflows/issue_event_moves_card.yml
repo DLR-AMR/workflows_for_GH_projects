@@ -60,16 +60,27 @@ jobs:
             --header "Authorization: Bearer ${{ secrets.PAT }}" \
             --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
           echo "project_fields=$project_fields"
-          # Get the issues within the project
-          #project_issues=$(curl --request POST \
-          #  --url https://api.github.com/graphql \
-          #  --header "Authorization: Bearer ${{ secrets.PAT }}" \
-          #  --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } pageInfo {endCursor startCursor hasNextPage} } } } }\"}")    
-          project_issues=$(curl --request POST \
-            --url https://api.github.com/graphql \
-            --header "Authorization: Bearer ${{ secrets.PAT }}" \
-            --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { pageInfo { startCursor endCursor hasNextPage } nodes { id content { ... on Issue { id title } } } } } } }\"}")
-          echo "issues=$project_issues"
+          # set hasNextPage initially to true
+          hasNextPage=true
+          # initialy set the startCursor to null
+          startCursor=null
+          # start a while loop to get all the issues in the project, until hasNextPage is false
+          while [ "$hasNextPage" == "true" ]; do
+            echo "retrieve page"
+            # Get the issues within the project
+            project_issues=$(curl --request POST \
+              --url https://api.github.com/graphql \
+              --header "Authorization: Bearer ${{ secrets.PAT }}" \
+              --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100, after: "$startCursor") { pageInfo { startCursor endCursor hasNextPage } nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")    
+            echo "issues=$project_issues"
+            # Update hasNextPage
+            hasNextPage=$(echo $project_issues | jq -r '.data.node.items.pageInfo.hasNextPage')
+            # Update startCursor
+            startCursor=$(echo $project_issues | jq -r '.data.node.items.pageInfo.endCursor')
+            echo "hasNextPage=$hasNextPage"
+            echo "startCursor=$startCursor"
+          done
+          # Get the startCursor
           # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
           issue_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.id')
           PVII_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].id')
