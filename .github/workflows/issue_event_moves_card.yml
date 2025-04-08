@@ -63,7 +63,7 @@ jobs:
           # set hasNextPage initially to true
           hasNextPage=true
           # initialy set the startCursor to null
-          startCursor=null
+            startCursor=""
           # start a while loop to get all the issues in the project, until hasNextPage is false
           while [ "$hasNextPage" == "true" ]; do
             echo "retrieve page"
@@ -77,10 +77,6 @@ jobs:
             hasNextPage=$(echo $project_issues | jq -r '.data.node.items.pageInfo.hasNextPage')
             # Update startCursor
             startCursor=$(echo $project_issues | jq -r '.data.node.items.pageInfo.endCursor')
-            # Ensure startCursor is properly formatted as a string
-            if [ "$startCursor" != "null" ]; then
-              startCursor="\"$startCursor\""
-            fi
 
             echo "hasNextPage=$hasNextPage"
             echo "startCursor=$startCursor"
