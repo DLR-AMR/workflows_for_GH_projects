@@ -82,7 +82,9 @@ jobs:
             echo "startCursor=$startCursor"
             # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
             issue_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.id')
+            echo "issue_ids=$issue_ids"
             PVII_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].id')
+            echo "PVII_ids=$PVII_ids"
             # In the following loop we need both values, so we combine them into a single string
             combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
             for combined_id in $combined_ids; do
@@ -122,7 +124,7 @@ jobs:
                   echo "workload_message is $workload_message"
                   echo "change workload field $workload_field_id of issue $issue_id in project $project_id to $WORKLOAD"
                 fi
-      
+
                 # Construct the query to move the issue to the specified column.
                 # The query is a mutation that updates the status, priority, and workload fields of the issue.
                 # If priority or workload are not set, the corresponding message is empty.
