@@ -63,11 +63,9 @@ jobs:
           # set hasNextPage initially to true
           hasNextPage=true
           # initialy set the startCursor to null
-            startCursor=""
+          startCursor=""
           # start a while loop to get all the issues in the project, until hasNextPage is false
-          iter_count=0
-          while [ "$hasNextPage" == "true" && iter_count < 5 ]; do
-            iter_count=$((iter_count + 1))
+          while [ "$hasNextPage" == "true" ]; do
             echo "retrieve page"
             # Get the issues within the project
             project_issues=$(curl --request POST \
@@ -83,7 +81,6 @@ jobs:
             echo "hasNextPage=$hasNextPage"
             echo "startCursor=$startCursor"
             # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
-            
             issue_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.id')
             PVII_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].id')
             # In the following loop we need both values, so we combine them into a single string
@@ -125,7 +122,7 @@ jobs:
                   echo "workload_message is $workload_message"
                   echo "change workload field $workload_field_id of issue $issue_id in project $project_id to $WORKLOAD"
                 fi
-
+      
                 # Construct the query to move the issue to the specified column.
                 # The query is a mutation that updates the status, priority, and workload fields of the issue.
                 # If priority or workload are not set, the corresponding message is empty.
