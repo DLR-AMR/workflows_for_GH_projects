@@ -78,6 +78,10 @@ jobs:
             # Update startCursor
             startCursor=$(echo $project_issues | jq -r '.data.node.items.pageInfo.endCursor')
             echo "hasNextPage=$hasNextPage"
+            # Ensure startCursor is properly formatted as a string
+            if [ "$startCursor" != "null" ]; then
+              startCursor="\"$startCursor\""
+            fi
             echo "startCursor=$startCursor"
           done
           # Get the startCursor
