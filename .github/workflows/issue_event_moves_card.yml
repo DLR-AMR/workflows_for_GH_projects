@@ -65,7 +65,7 @@ jobs:
           # initialy set the startCursor to null
             startCursor=""
           # start a while loop to get all the issues in the project, until hasNextPage is false
-          iter_count = 0
+          iter_count=0
           while [ "$hasNextPage" == "true" && iter_count < 5 ]; do
             iter_count=$((iter_count + 1))
             echo "retrieve page"
