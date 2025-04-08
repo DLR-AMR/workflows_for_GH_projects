@@ -50,15 +50,22 @@ jobs:
             --header "Authorization: Bearer ${{ secrets.PAT }}" \
             --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
         echo "projects=$projects"
+        ############################################... on ProjectV2SingleSelectField { id name options  }
         # Get the project IDs
         project_ids=$(echo $projects | jq -r '.data.organization.projectsV2.nodes[].id')
         for project_id in $project_ids; do
           echo "project_id is $project_id"
-          # Get the issues within the project
-          project_fields_and_issues=$(curl --request POST \
+          # Get the field ids of the project
+          project_fields=$(curl --request POST \
             --url https://api.github.com/graphql \
             --header "Authorization: Bearer ${{ secrets.PAT }}" \
-            --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
+            --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
+          echo "project_fields=$project_fields"
+          # Get the issues within the project
+          project_issues=$(curl --request POST \
+            --url https://api.github.com/graphql \
+            --header "Authorization: Bearer ${{ secrets.PAT }}" \
+            --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id title } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options } } } } } }\"}")
           echo "issues=$project_fields_and_issues"
           # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
           issue_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.id')
