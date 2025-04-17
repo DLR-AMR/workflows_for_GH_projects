@@ -14,7 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
     - name: Check commit message
@@ -39,5 +38,6 @@ jobs:
   update_version:
     if: (github.event_name == 'pull_request' && needs.check_commit_message.outputs.trigger_version_update == 'true')
     uses: ./.github/workflows/create_version_tag.yml
-    secrets: inherit
+    secrets: 
+      PAT: ${{ secrets.TEST_SECRET }}
     needs: [check_commit_message]
