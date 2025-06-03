@@ -129,7 +129,7 @@ jobs:
                 echo "Extract ID of Date"
                 date_field_id="UNSET"
                 echo "date_field_id is $date_field_id"
-                echo "Test: $(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[]')'""
+                echo "Test: $(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[]')'"
                 date_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Date_Set") | .id')
                 echo "date_field_id is $date_field_id"
                 #date_option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Date_Set") | .options[] | select(.name == $COLUMN_NAME) | .id')
