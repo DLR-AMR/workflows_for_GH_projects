@@ -128,9 +128,10 @@ jobs:
                 # Test
                 echo "Extract ID of Date"
                 date_field_id="UNSET"
-                echo "date_field_is is $date_field_id"
+                echo "date_field_id is $date_field_id"
+                echo "Test: $(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[]')'""
                 date_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Date_Set") | .id')
-                echo "date_field_is is $date_field_id"
+                echo "date_field_id is $date_field_id"
                 #date_option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Date_Set") | .options[] | select(.name == $COLUMN_NAME) | .id')
                 #date_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: "12-11-1991"}) {projectV2Item {id}}"
                 #echo "date_message is $date_message"
