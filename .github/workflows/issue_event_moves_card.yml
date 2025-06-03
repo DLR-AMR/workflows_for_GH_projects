@@ -74,7 +74,7 @@ jobs:
             project_fields_and_issues=$(curl --request POST \
               --url https://api.github.com/graphql \
               --header "Authorization: Bearer ${{ secrets.PAT }}" \
-              --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100, after: \\\"$startCursor\\\") { pageInfo { startCursor endCursor hasNextPage } nodes { id fieldValues(first: 10) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")    
+              --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100, after: \\\"$startCursor\\\") { pageInfo { startCursor endCursor hasNextPage } nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")    
             echo "issues=$project_fields_and_issues"
             # Update hasNextPage
             hasNextPage=$(echo $project_fields_and_issues | jq -r '.data.node.items.pageInfo.hasNextPage')
@@ -129,7 +129,7 @@ jobs:
                 echo "Extract ID of Date"
                 date_field_id="UNSET"
                 echo "date_field_id is $date_field_id"
-                echo "Test: $(echo $project_fields_and_issues)"
+                echo "Test: $(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[]')"
                 date_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Created_At") | .id')
                 echo "date_field_id is $date_field_id"
                 #date_option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Created_At") | .options[] | select(.name == $COLUMN_NAME) | .id')
