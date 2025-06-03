@@ -130,6 +130,9 @@ jobs:
                 date_field_id="UNSET"
                 echo "date_field_id is $date_field_id"
                 echo "Test: $(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[]')"
+                echo "Test2: $(echo $project_fields_and_issues | jq -r '.data[]')"
+                echo "Test3: $(echo $project_fields_and_issues | jq -r '.data.node[]')"
+                echo "Test4: $(echo $project_fields_and_issues | jq -r '.data.node.fields[]')"
                 #echo "Test: $(echo $project_fields_and_issues | jq -r '.[] | select(.name == "Created_At") | .id')"
                 date_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Created_At") | .id')
                 echo "date_field_id is $date_field_id"
