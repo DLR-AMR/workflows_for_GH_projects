@@ -27,9 +27,6 @@ on:
         type: string
         default: 'unset'
         description: 'The date of the issue'
-      CREATED_AT:
-        type: date
-        description: 'The date of the issue'
     secrets:
         PAT:
           required: true
