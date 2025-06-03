@@ -29,7 +29,6 @@ on:
         description: 'The date of the issue'
       CREATED_AT:
         type: date
-        default: date:1991-12-11
         description: 'The date of the issue'
     secrets:
         PAT:
