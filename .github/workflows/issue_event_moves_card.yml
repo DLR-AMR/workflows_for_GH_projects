@@ -149,8 +149,8 @@ jobs:
                 query=$(jq -n --arg sm "$status_message" \
                         --arg pm "$priority_message" \
                         --arg wm "$workload_message" \
-                        --arg dm "$date_message"
-                        '{"query": "mutation { \($sm) \($pm) \($wm) }"}' | \
+                        --arg dm "$date_message" \
+                        '{"query": "mutation { \($sm) \($pm) \($wm) \($dm) }"}' | \
                       jq '.query |= gsub("null"; "") | .query |= gsub("\\s+"; " ") | .query |= sub("\\{\\s*\\}"; "{}")' | \
                       sed 's/\\\\"/"/g' | \
                       sed "s/'//g")
