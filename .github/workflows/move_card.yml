@@ -129,7 +129,7 @@ jobs:
   # Add the issue's date of creation to the project board card.
   add_creation_date:
     needs: [evaluate_issues]
-    if: ${{ github.event.action == 'opened' || ( github.event.action == 'labeled' && contains(join(github.event.issue.labels.*.name, ','), 'manual_trigger_date_event') ) }}
+    if: ${{ github.event.action == 'opened' || ( github.event.action == 'labeled' && contains(join(github.event.issue.labels.*.name, ','), 'manually_trigger_date_event') ) }}
     uses: ./.github/workflows/add_date_created.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
