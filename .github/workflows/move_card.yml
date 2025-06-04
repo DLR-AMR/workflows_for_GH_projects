@@ -15,6 +15,7 @@ jobs:
       PRIORITY_SET: ${{ steps.check_urgency.outputs.PRIORITY_SET || 'false' }}
       WORKLOAD: ${{ steps.check_workload.outputs.WORKLOAD || 'false' }}
       PRIORITY: ${{ steps.check_urgency.outputs.PRIORITY || 'false' }}
+      CREATION_DATE: ${{ steps.check_workload.outputs.CREATION_DATE || 'unset' }}
     steps:
       - name: "Check if workload is set"
         id: check_workload
@@ -41,6 +42,7 @@ jobs:
             github_date_string="${{ github.event.issue.created_at }}"
             date_string="${github_date_string:0:10}"
             echo "$date_string"
+            echo "CREATION_DATE=$date_string" >> $GITHUB_OUTPUT
       - name: "Check if workload has not been set"
         id: check_workload_not_set
         if: |
@@ -130,6 +132,7 @@ jobs:
         COLUMN_NAME: 'ToDo'
         PRIORITY: ${{ needs.evaluate_issues.outputs.PRIORITY }}
         WORKLOAD: ${{ needs.evaluate_issues.outputs.WORKLOAD }}
+        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
   

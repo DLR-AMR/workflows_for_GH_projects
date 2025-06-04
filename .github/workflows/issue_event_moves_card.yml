@@ -23,7 +23,7 @@ on:
         type: string
         default: 'NONE'
         description: 'The workload of the issue'
-      DATE_SET:
+      CREATION_DATE:
         type: string
         default: 'unset'
         description: 'The date of the issue'
@@ -43,9 +43,10 @@ jobs:
         WORKLOAD="${{ inputs.WORKLOAD }}"
         COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
         CURRENT_COLUMN_NAME="${{ inputs.CURRENT_COLUMN_NAME }}"
+        CREATION_DATE="${{ inputs.CREATION_DATE }}"
         echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
         echo "PRIORITY=$PRIORITY"
-        echo "WORKLOAD=$WORKLOAD"
+        echo "CREATION_DATE=$CREATION_DATE"
         echo "COLUMN_NAME=$COLUMN_NAME"
         echo "CURRENT_COLUMN_NAME=$CURRENT_COLUMN_NAME"
         # Get the projects associated with the organization
