@@ -141,9 +141,9 @@ jobs:
                 #date_option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Created_At") | .options[] | select(.name == $COLUMN_NAME) | .id')
                 #today="echo $(date +"%Y-%m-%d)"
                 #today="2023-12-11"
-                today=$(date +"%Y-%m-%d")
-                echo "today is $today"
-                date_message="updateProjectV2ItemFieldValue3: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: {date: \"'$today'\"}}) {projectV2Item {id}}"
+                #today=$(date +"%Y-%m-%d")
+                #echo "today is $today"
+                date_message="updateProjectV2ItemFieldValue3: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: {date: \"'$CREATION_DATE'\"}}) {projectV2Item {id}}"
                 #echo "date_message is $date_message"
                 echo "Continue!"
                 
