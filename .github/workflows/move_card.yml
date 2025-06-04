@@ -99,15 +99,6 @@ jobs:
       CREATION_DATE: ${{ steps.get_creation_date_pr.outputs.CREATION_DATE }}
     if: ${{ github.event_name == 'pull_request' }}
     steps:
-      - name: "Extract the issues date of creation"
-        id: get_creation_date_pr
-        run: |
-            echo "Extract the date of creation:"
-            echo "${{ github.event.pull_request.created_at }}"
-            github_date_string="${{ github.event.issue.created_at }}"
-            CREATION_DATE="${github_date_string:0:10}"
-            echo "$CREATION_DATE"
-            echo "CREATION_DATE=$CREATION_DATE" >> $GITHUB_OUTPUT
     
       - name: "Get link between PR and Issue"
         id: get_pr_issue_link
