@@ -8,8 +8,8 @@ on:
         type: string
         description: 'The node id of the issue that triggered the workflow'
       CREATION_DATE:
+        required: true
         type: string
-        default: 'NONE'
         description: 'The date of the issue'
     secrets:
         PAT:
