@@ -25,7 +25,7 @@ on:
         description: 'The workload of the issue'
       CREATION_DATE:
         type: string
-        default: 'unset'
+        default: 'NONE'
         description: 'The date of the issue'
     secrets:
         PAT:
