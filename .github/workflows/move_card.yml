@@ -2,7 +2,7 @@ name: "Move the Issue after workload and urgency is evaluated"
 
 on:
   issues:
-    types: [labeled, assigned, unassigned, unlabeled, opened, commented]
+    types: [labeled, assigned, unassigned, unlabeled, opened]
   pull_request:
     types: [opened, reopened, ready_for_review, review_requested, review_request_removed, closed]
 
@@ -127,10 +127,10 @@ jobs:
             echo "NUMBER_IS_SET=$NUMBER_IS_SET"
             echo "${{ github.event.action }}"
 
-  # Move the issue card to ToDo if the workload and priority are set
+  # Add the issue's date of creation to the project board card.
   add_creation_date:
     needs: [evaluate_issues]
-    if: ${{ github.event.action == 'opened' }}
+    if: ${{ github.event.action == 'opened' || contains(join(github.event.issue.labels.*.name, ','), 'manual_trigger_date_event') }}
     uses: ./.github/workflows/add_date_created.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
@@ -138,6 +138,7 @@ jobs:
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
+  # Move the issue card to ToDo if the workload and priority are set
   move_card_to_ToDo:
     needs: [evaluate_issues]
     if: ${{ github.event.action == 'labeled' && needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' }}
