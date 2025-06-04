@@ -38,6 +38,9 @@ jobs:
             echo "${{ github.event.action }}"
             echo "---- And the date of creation? ----"
             echo "${{ github.event.issue.created_at }}"
+            github_date_string="${{ github.event.issue.created_at }}"
+            date_string="${github_date_string:0:10}"
+            echo "$date_string"
       - name: "Check if workload has not been set"
         id: check_workload_not_set
         if: |
