@@ -138,7 +138,7 @@ jobs:
                 date_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Created_At") | .id')
                 echo "date_field_id is $date_field_id"
                 #date_option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Created_At") | .options[] | select(.name == $COLUMN_NAME) | .id')
-                #date_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: "12-11-1991"}) {projectV2Item {id}}"
+                date_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: "2025-06-02"}) {projectV2Item {id}}"
                 #echo "date_message is $date_message"
                 echo "Continue!"
                 
@@ -149,6 +149,7 @@ jobs:
                 query=$(jq -n --arg sm "$status_message" \
                         --arg pm "$priority_message" \
                         --arg wm "$workload_message" \
+                        --arg dm "$date_message"
                         '{"query": "mutation { \($sm) \($pm) \($wm) }"}' | \
                       jq '.query |= gsub("null"; "") | .query |= gsub("\\s+"; " ") | .query |= sub("\\{\\s*\\}"; "{}")' | \
                       sed 's/\\\\"/"/g' | \
