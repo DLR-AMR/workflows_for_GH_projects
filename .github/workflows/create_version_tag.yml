@@ -2,7 +2,6 @@
 permissions:
   contents: write
 
-
 on:  
 # Allows to run this workflow manually from the GitHub actions tab
   workflow_call:
