@@ -185,7 +185,6 @@ jobs:
         CURRENT_COLUMN_NAME: 'In Progress'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
-        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
@@ -199,7 +198,6 @@ jobs:
         CURRENT_COLUMN_NAME: 'Needs Review'
         COLUMN_NAME: 'In Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
-        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
@@ -213,7 +211,6 @@ jobs:
         CURRENT_COLUMN_NAME: 'In Review'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
-        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
@@ -227,7 +224,6 @@ jobs:
         CURRENT_COLUMN_NAME: 'Needs Review'
         COLUMN_NAME: 'In Progress'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
-        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
