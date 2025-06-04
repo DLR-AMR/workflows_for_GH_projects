@@ -2,7 +2,7 @@ name: "Move the Issue after workload and urgency is evaluated"
 
 on:
   issues:
-    types: [labeled, assigned, unassigned, unlabeled, opened, edited]
+    types: [labeled, assigned, unassigned, unlabeled, opened, commented]
   pull_request:
     types: [opened, reopened, ready_for_review, review_requested, review_request_removed, closed]
 
