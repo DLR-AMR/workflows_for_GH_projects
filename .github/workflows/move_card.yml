@@ -21,9 +21,7 @@ jobs:
         id: get_creation_date
         run: |
             echo "Extract the date of creation:"
-            echo "${{ github.event.issue.created_at }}"
-            #github_date_string="${{ github.event.issue.created_at }}"
-            github_date_string="${{ github.event.issue.updated_at }}"
+            github_date_string="${{ github.event.issue.created_at }}"
             CREATION_DATE="${github_date_string:0:10}"
             echo "$CREATION_DATE"
             echo "CREATION_DATE=$CREATION_DATE" >> $GITHUB_OUTPUT
