@@ -23,10 +23,6 @@ on:
         type: string
         default: 'NONE'
         description: 'The workload of the issue'
-      CREATION_DATE:
-        type: string
-        default: 'NONE'
-        description: 'The date of the issue'
     secrets:
         PAT:
           required: true
@@ -43,10 +39,8 @@ jobs:
         WORKLOAD="${{ inputs.WORKLOAD }}"
         COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
         CURRENT_COLUMN_NAME="${{ inputs.CURRENT_COLUMN_NAME }}"
-        CREATION_DATE="${{ inputs.CREATION_DATE }}"
         echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
         echo "PRIORITY=$PRIORITY"
-        echo "CREATION_DATE=$CREATION_DATE"
         echo "COLUMN_NAME=$COLUMN_NAME"
         echo "CURRENT_COLUMN_NAME=$CURRENT_COLUMN_NAME"
         # Get the projects associated with the organization
@@ -125,17 +119,6 @@ jobs:
                   echo "workload_message is $workload_message"
                   echo "change workload field $workload_field_id of issue $issue_id in project $project_id to $WORKLOAD"
                 fi
-                
-                ## Test
-                #date_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Date_Created") | .id')
-                #echo "date_field_id is $date_field_id"
-                #date_message="updateProjectV2ItemFieldValue3: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: {date: \"'$CREATION_DATE'\"}}) {projectV2Item {id}}"
-                #echo "Continue!"
-
-                #date_updated_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Date_Updated") | .id')
-                #echo "date_updated_field_id is $date_updated_field_id"
-                #date_message="updateProjectV2ItemFieldValue4: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: {date: \"'$DATE_UPDATED'\"}}) {projectV2Item {id}}"
-                #echo "Continue!"
                 
                 # Construct the query to move the issue to the specified column.
                 # The query is a mutation that updates the status, priority, and workload fields of the issue.

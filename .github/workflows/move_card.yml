@@ -96,7 +96,6 @@ jobs:
       NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
       CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
       REPO_NODE_ID: ${{ steps.get_pr_issue_link.outputs.REPO_NODE_ID }}
-      CREATION_DATE: ${{ steps.get_creation_date_pr.outputs.CREATION_DATE }}
     if: ${{ github.event_name == 'pull_request' }}
     steps:
     
@@ -149,7 +148,6 @@ jobs:
         COLUMN_NAME: 'ToDo'
         PRIORITY: ${{ needs.evaluate_issues.outputs.PRIORITY }}
         WORKLOAD: ${{ needs.evaluate_issues.outputs.WORKLOAD }}
-        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
   
@@ -162,7 +160,6 @@ jobs:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         CURRENT_COLUMN_NAME: 'ToDo'
         COLUMN_NAME: 'In Progress'
-        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
@@ -175,7 +172,6 @@ jobs:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         CURRENT_COLUMN_NAME: 'In Progress'
         COLUMN_NAME: 'ToDo'
-        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
   
@@ -188,7 +184,6 @@ jobs:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         CURRENT_COLUMN_NAME: 'ToDo'
         COLUMN_NAME: 'In-Box'
-        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
@@ -264,7 +259,6 @@ jobs:
         CURRENT_COLUMN_NAME: 'IGNORE'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
-        #CREATION_DATE:  ${{ needs.evaluate_pr.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
 
@@ -279,6 +273,5 @@ jobs:
         CURRENT_COLUMN_NAME: 'IGNORE'
         COLUMN_NAME: 'In Progress'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
-        #CREATION_DATE:  ${{ needs.evaluate_pr.outputs.CREATION_DATE }}
     secrets:
         PAT: ${{ secrets.TEST_SECRET }}
