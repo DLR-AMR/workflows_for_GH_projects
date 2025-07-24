@@ -22,9 +22,11 @@ jobs:
         outputs:
             ISSUE_NUMBER: ${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}
         steps:
-        - uses: actions/checkout@v4
-          with:
-                fetch-depth: 0
+        #- uses: actions/checkout@v4
+        #  with:
+        #        repository: ${{ github.event.repository.full_name }}
+        #        ref: ${{ github.event.pull_request.head.ref }}
+        #        fetch-depth: 0
 
         - name: "Set up environment"
           run: echo "GITHUB_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
