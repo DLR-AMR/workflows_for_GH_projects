@@ -88,7 +88,9 @@ GIT_COMMIT_MESSAGE="Updated the version to ${NEW_VERSION}"
 
 # Add the changes to a new commit
 # ToDO: Change the user name
-git config user.name "Davknapp"
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+#git config user.name "Davknapp"
 
 
 echo "git add version.txt"
