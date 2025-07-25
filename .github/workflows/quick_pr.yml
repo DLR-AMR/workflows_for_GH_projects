@@ -27,6 +27,7 @@ jobs:
         #        repository: ${{ github.event.repository.full_name }}
         #        ref: ${{ github.event.pull_request.head.ref }}
         #        fetch-depth: 0
+        # Test
 
         - name: "Set up environment"
           run: echo "GITHUB_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
