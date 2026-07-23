@@ -3,8 +3,12 @@ name: "Move the Issue after workload and urgency is evaluated"
 on:
   issues:
     types: [labeled, assigned, unassigned, unlabeled, opened]
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, ready_for_review, review_requested, review_request_removed, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   evaluate_issues:
@@ -92,11 +96,14 @@ jobs:
   
   evaluate_pr:
     runs-on: ubuntu-latest
+    # Don't run in parallel on the same PR. Otherwise multiple issues might be created for the same PR. 
+    concurrency:
+      group: pr-move-card-${{ github.event.pull_request.id }}
     outputs:
       NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
       CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
       REPO_NODE_ID: ${{ steps.get_pr_issue_link.outputs.REPO_NODE_ID }}
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request_target' }}
     steps:
     
       - name: "Get link between PR and Issue"
@@ -127,9 +134,10 @@ jobs:
             echo "${{ github.event.action }}"
 
   # Add the issue's date of creation to the project board card.
+  # Triggered only if the issue was newly opened or the label 'manual_trigger_date_event' has been added.
   add_creation_date:
     needs: [evaluate_issues]
-    if: ${{ github.event.action == 'opened' || ( github.event.action == 'labeled' && contains(join(github.event.issue.labels.*.name, ','), 'manually_trigger_date_event') ) }}
+    if: ${{ github.event.action == 'opened' || ( github.event.action == 'labeled' && contains(join(github.event.issue.labels.*.name, ','), 'manual_trigger_date_event') ) }}
     uses: ./.github/workflows/add_date_created.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
@@ -242,7 +250,7 @@ jobs:
   # For a PR event where no issue is linked, open a new issue and add "Closes #ISSUE_NUMBER" to the PR body
   open_issue_for_quick_pr:
     needs: [evaluate_pr]
-    if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
+    if: ${{ github.event_name == 'pull_request_target' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
     uses: ./.github/workflows/quick_pr.yml
     with:
         DEFAULT_PROJECT: "t8code's Issue Landing page"
