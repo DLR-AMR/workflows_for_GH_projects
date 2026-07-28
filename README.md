@@ -20,19 +20,19 @@ The workflows are triggered by a repository. The projects can be on organization
 5. Create the labels "workload:high", "workload:medium", "workload:low", "priority:high", "priority:medium" and "priority:low" in your github repository.
 
 # What will happen
-All issues that match the filter will land in your project. Having a look at your Board you will see that all freshly opened issues will land in "In-Box". 
+All issues that match the filter will land in your project. Having a look at your Board you will see that all freshly opened issues will land in "In-Box".
 
 As soon as an issues has been labeled with a workload and a priority it is ready to be worked on and will move to the column "ToDo".
 
-Once an assignee for that issue has been found it will move to "In Progress", preventing that two developers will work on the same Issue. 
+Once an assignee for that issue has been found it will move to "In Progress", preventing that two developers will work on the same Issue.
 
 If a PR is opened, reopened or a draft PR is set to "ready to review" and the Issue that is solved by that PR is referenced by "#ISSUE_NUMBER" the card is moved to "Needs Review". 
 
-Once someone is assigned to do the review the issue is moved to "In Review". 
+Once someone is assigned to do the review the issue is moved to "In Review".
 
-Merging the PR will close the Issue and it will be moved to "Done" 
+Merging the PR will close the Issue and it will be moved to "Done"
 
 Once it has been communicated to other developers what has been done the card can manually be moved to "Can be archived".
-All closed issues will automatically be archived after 2 weeks. 
+All closed issues will automatically be archived after 2 weeks.
 
-For quick-fixes you can also open up a "quick Pull request". It can be annoying for a developer to open up an Issue for every small typo / bug-fix / one-line-change in a repository. To make this a more comfortable process we allow developers to open a quick-PR, which is a PR that does not reference an Issue. In that case an Issue is created and linked to the PR by adding "Closes #ISSUE_NUMBER" to the top of the body of the PR. 
+For quick-fixes you can also open up a "quick Pull request". It can be annoying for a developer to open up an Issue for every small typo / bug-fix / one-line-change in a repository. To make this a more comfortable process we allow developers to open a quick-PR, which is a PR that does not reference an Issue. In that case an Issue is created and linked to the PR by adding "Closes #ISSUE_NUMBER" to the top of the body of the PR.
